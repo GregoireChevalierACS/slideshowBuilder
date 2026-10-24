@@ -1,0 +1,27 @@
+{
+  "name": "@slideshow/application",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@slideshow/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "0.23.2"
+  }
+}
