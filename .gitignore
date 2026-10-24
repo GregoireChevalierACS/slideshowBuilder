@@ -1,0 +1,41 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Tests et rapports
+coverage/
+reports/
+.stryker-tmp/
+test-results/
+playwright-report/
+
+# Données locales : les diagnostics clients ne doivent jamais être versionnés
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+data/
+exports/
+
+# Configuration locale (le modèle .env.example, lui, est versionné)
+.env
+.env.*
+!.env.example
+
+# Journaux
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Éditeurs et système
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
