@@ -16,9 +16,15 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:mutation": "stryker run"
   },
   "devDependencies": {
-    "tsdown": "0.23.2"
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "fast-check": "4.10.2",
+    "tsdown": "0.23.2",
+    "vitest": "4.1.12"
   }
 }

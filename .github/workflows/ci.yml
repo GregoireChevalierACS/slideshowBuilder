@@ -60,3 +60,14 @@ jobs:
 
       - name: Build de production
         run: pnpm build
+
+      - name: Test de mutation
+        run: pnpm test:mutation
+
+      - name: Rapport de mutation
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-mutation
+          path: packages/domain/reports/mutation/
+          if-no-files-found: ignore

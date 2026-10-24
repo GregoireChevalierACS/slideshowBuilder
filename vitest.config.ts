@@ -1,32 +1,14 @@
 import { defineConfig } from 'vitest/config';
 
-// Les tests lisent les sources des paquets (condition d'export « source ») : pas de build préalable.
-const conditionsSource = { conditions: ['source'] };
-
 export default defineConfig({
-  resolve: conditionsSource,
-  ssr: { resolve: conditionsSource },
   test: {
-    projects: [
-      {
-        extends: true,
-        test: { name: 'domain', root: 'packages/domain', include: ['src/**/*.test.ts'] },
-      },
-      {
-        extends: true,
-        test: {
-          name: 'application',
-          root: 'packages/application',
-          include: ['src/**/*.test.ts'],
-        },
-      },
-    ],
-    // Tant que la phase 1 n'a pas commencé, aucun fichier de test n'existe.
+    // Chaque paquet décrit son projet dans son propre vitest.config.ts (réutilisé par Stryker).
+    projects: ['packages/*'],
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.test.ts', '**/index.ts'],
+      exclude: ['**/*.test.ts', '**/index.ts', '**/testing/**'],
       reporter: ['text', 'html'],
       reportsDirectory: 'coverage',
       thresholds: {
