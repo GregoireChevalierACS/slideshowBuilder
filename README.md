@@ -8,6 +8,38 @@ Application locale qui accompagne un rendez-vous de prospection : elle sert à n
 - **Déterministe** : aucune IA dans l'application. Les architectures et les gains viennent de règles et de calculs testés.
 - **Exporté en PDF**, présentations en français.
 
-## État
+## Démarrage
 
-Projet en cours de mise en place : phase 0 (socle et outillage).
+Prérequis : Node 24 (voir `.node-version`) et pnpm 10 (`corepack enable` suffit).
+
+```bash
+pnpm install          # installe les dépendances et active les hooks Git
+pnpm test             # tests
+pnpm test:coverage    # tests + couverture (100 % exigés sur le domaine)
+```
+
+## Vérifications
+
+Les mêmes commandes tournent en CI ([ci.yml](.github/workflows/ci.yml)) :
+
+| Commande                 | Vérifie                                                |
+| ------------------------ | ------------------------------------------------------ |
+| `pnpm lint`              | ESLint typé, imports interdits dans le domaine         |
+| `pnpm lint:architecture` | Graphe des dépendances (dependency-cruiser)            |
+| `pnpm format:check`      | Formatage Prettier                                     |
+| `pnpm typecheck`         | Types                                                  |
+| `pnpm test:coverage`     | Tests et seuils de couverture                          |
+| `pnpm build`             | Build de production des paquets                        |
+| `pnpm commits:check`     | Format des commits : `yyyy-mm-dd # N : (type) message` |
+
+Les hooks Git refusent tout commit direct sur `main` et tout message mal formé.
+
+## Problèmes courants
+
+- **`ERR_PNPM_UNSUPPORTED_ENGINE`** : la version de Node est trop ancienne. Installer Node 24, puis rouvrir le terminal.
+- **Un hook échoue avec « pnpm introuvable »** : le terminal a été ouvert avant l'installation de Node. Le rouvrir.
+
+## Documentation
+
+- [Feuille de route](ROADMAP.md)
+- [Décisions d'architecture](docs/adr/)
