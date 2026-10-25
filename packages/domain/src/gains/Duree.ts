@@ -22,4 +22,15 @@ export class Duree {
   static depuisMinutes(minutes: number): Result<Duree, DureeInvalide> {
     return Duree.depuisSecondes(minutes * SECONDES_PAR_MINUTE);
   }
+
+  /**
+   * Pour un résultat de calcul, pas pour une saisie : une valeur négative ou infinie ne peut venir
+   * que d'un bug, d'où une exception plutôt qu'un Result.
+   */
+  static arrondie(secondesExactes: number): Duree {
+    if (!Number.isFinite(secondesExactes) || secondesExactes < 0) {
+      throw new RangeError(`Durée calculée invalide : ${String(secondesExactes)} s`);
+    }
+    return new Duree(Math.round(secondesExactes));
+  }
 }

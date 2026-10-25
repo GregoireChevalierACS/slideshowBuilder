@@ -27,6 +27,25 @@ describe('Montant', () => {
     });
   });
 
+  describe('arrondi depuis un calcul', () => {
+    it.each([
+      [1.4, 1],
+      [1.5, 2],
+      [0, 0],
+    ])('arrondit %s centime(s) à %s', (centimesExacts, attendu) => {
+      expect(Montant.arrondi(centimesExacts).enCentimes).toBe(attendu);
+    });
+
+    it.each([-0.1, Number.NaN, Number.POSITIVE_INFINITY])(
+      'signale un bug de calcul pour %s centime(s)',
+      (centimesExacts) => {
+        expect(() => Montant.arrondi(centimesExacts)).toThrow(
+          new RangeError(`Montant calculé invalide : ${String(centimesExacts)} centimes`),
+        );
+      },
+    );
+  });
+
   it('conserve exactement tout nombre entier positif de centimes', () => {
     fc.assert(
       fc.property(fc.nat(), (centimes) => {

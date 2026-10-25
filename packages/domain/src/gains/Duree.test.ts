@@ -40,6 +40,25 @@ describe('Duree', () => {
     });
   });
 
+  describe('arrondie depuis un calcul', () => {
+    it.each([
+      [1.4, 1],
+      [1.5, 2],
+      [0, 0],
+    ])('arrondit %s s à %s s', (secondesExactes, attendu) => {
+      expect(Duree.arrondie(secondesExactes).enSecondes).toBe(attendu);
+    });
+
+    it.each([-0.1, Number.NaN, Number.POSITIVE_INFINITY])(
+      'signale un bug de calcul pour %s s',
+      (secondesExactes) => {
+        expect(() => Duree.arrondie(secondesExactes)).toThrow(
+          new RangeError(`Durée calculée invalide : ${String(secondesExactes)} s`),
+        );
+      },
+    );
+  });
+
   it('conserve exactement tout nombre entier positif de secondes', () => {
     fc.assert(
       fc.property(fc.nat(), (secondes) => {

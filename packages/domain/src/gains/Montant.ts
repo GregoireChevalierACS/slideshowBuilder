@@ -16,4 +16,15 @@ export class Montant {
     if (centimes < 0) return err({ kind: 'MontantNegatif', valeur: centimes });
     return ok(new Montant(centimes));
   }
+
+  /**
+   * Pour un résultat de calcul, pas pour une saisie : une valeur négative ou infinie ne peut venir
+   * que d'un bug, d'où une exception plutôt qu'un Result.
+   */
+  static arrondi(centimesExacts: number): Montant {
+    if (!Number.isFinite(centimesExacts) || centimesExacts < 0) {
+      throw new RangeError(`Montant calculé invalide : ${String(centimesExacts)} centimes`);
+    }
+    return new Montant(Math.round(centimesExacts));
+  }
 }
