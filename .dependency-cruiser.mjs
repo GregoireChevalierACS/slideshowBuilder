@@ -10,7 +10,8 @@ export default {
       comment:
         'Le domaine ne dépend que de lui-même : ni paquet npm, ni module Node, ni autre paquet du dépôt.',
       severity: 'error',
-      from: { path: '^packages/domain/src' },
+      // Les tests, eux, ont droit à leurs outils (vitest, fast-check).
+      from: { path: '^packages/domain/src', pathNot: '\\.test\\.ts$|/testing/' },
       to: {
         pathNot: '^packages/domain/src',
       },
@@ -20,7 +21,7 @@ export default {
       comment:
         "La couche application ne connaît que le domaine. Les adapters (serveur, base, UI) dépendent d'elle, pas l'inverse.",
       severity: 'error',
-      from: { path: '^packages/application/src' },
+      from: { path: '^packages/application/src', pathNot: '\\.test\\.ts$|/testing/' },
       to: {
         pathNot: ['^packages/application/src', '^packages/domain/src'],
       },
@@ -79,7 +80,7 @@ export default {
       severity: 'warn',
       from: {
         orphan: true,
-        pathNot: ['\\.test\\.ts$', '\\.config\\.ts$', '/index\\.ts$', '\\.d\\.ts$'],
+        pathNot: ['\\.test\\.ts$', '\\.config\\.(ts|mjs)$', '/index\\.ts$', '\\.d\\.ts$'],
       },
       to: {},
     },
