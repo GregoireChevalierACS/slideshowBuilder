@@ -70,6 +70,12 @@ describe('Scénarios de référence', () => {
       });
     });
 
+    it('paie aujourd’hui 16 416 + 4 104 + 2 160 = 22 680 € par an ce temps, soit 0,38 ETP', () => {
+      // 456 h et 114 h à 36 €/h, 36 h à 60 €/h ; 606 h / 1 607 h = 0,377
+      expect(estimation().total.valeurActuelleParAn.enCentimes).toBe(2_268_000);
+      expect(estimation().total.equivalentsTempsPleinActuels).toBe(38);
+    });
+
     it('libérerait de 0,25 à 0,33 ETP (405 h et 535,8 h / 1 607 h)', () => {
       expect(estimation().total.equivalentsTempsPleinLiberes).toStrictEqual({ bas: 25, haut: 33 });
     });

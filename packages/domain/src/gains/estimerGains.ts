@@ -12,14 +12,19 @@ export interface Fourchette<T> {
 export interface GainDUnProcessus {
   readonly processus: ProcessusRedondant;
   readonly tempsActuelParAn: Duree;
+  /** Ce que coûte aujourd'hui le temps passé sur la tâche. */
+  readonly valeurActuelleParAn: Montant;
   readonly tempsGagneParAn: Fourchette<Duree>;
   readonly valeurGagneeParAn: Fourchette<Montant>;
 }
 
 export interface TotalDesGains {
   readonly tempsActuelParAn: Duree;
+  readonly valeurActuelleParAn: Montant;
   readonly tempsGagneParAn: Fourchette<Duree>;
   readonly valeurGagneeParAn: Fourchette<Montant>;
+  /** En centièmes d'équivalent temps plein : 38 signifie 0,38 ETP. */
+  readonly equivalentsTempsPleinActuels: number;
   /** En centièmes d'équivalent temps plein : 26 signifie 0,26 ETP. */
   readonly equivalentsTempsPleinLiberes: Fourchette<number>;
 }
@@ -47,6 +52,7 @@ interface ValeursExactes {
   readonly secondesActuelles: number;
   readonly secondesGagneesBas: number;
   readonly secondesGagneesHaut: number;
+  readonly centimesActuels: number;
   readonly centimesGagnesBas: number;
   readonly centimesGagnesHaut: number;
 }
@@ -67,6 +73,7 @@ const valeursExactes = (
     secondesActuelles,
     secondesGagneesBas,
     secondesGagneesHaut,
+    centimesActuels: secondesActuelles * centimesParSeconde,
     centimesGagnesBas: secondesGagneesBas * centimesParSeconde,
     centimesGagnesHaut: secondesGagneesHaut * centimesParSeconde,
   };
@@ -101,8 +108,13 @@ export const estimerGains = (
     (l) => l.exacte.secondesActuelles,
     (l, arrondi) => ({ ...l, tempsActuelParAn: Duree.arrondie(arrondi) }),
   );
-  const avecTempsGagneBas = arrondirColonne(
+  const avecValeurActuelle = arrondirColonne(
     avecTempsActuel,
+    (l) => l.exacte.centimesActuels,
+    (l, arrondi) => ({ ...l, valeurActuelleParAn: Montant.arrondi(arrondi) }),
+  );
+  const avecTempsGagneBas = arrondirColonne(
+    avecValeurActuelle,
     (l) => l.exacte.secondesGagneesBas,
     (l, arrondi) => ({ ...l, tempsGagneBas: Duree.arrondie(arrondi) }),
   );
@@ -122,6 +134,7 @@ export const estimerGains = (
     (l, arrondi): GainDUnProcessus => ({
       processus: l.processus,
       tempsActuelParAn: l.tempsActuelParAn,
+      valeurActuelleParAn: l.valeurActuelleParAn,
       tempsGagneParAn: { bas: l.tempsGagneBas, haut: l.tempsGagneHaut },
       valeurGagneeParAn: { bas: l.valeurBasse, haut: Montant.arrondi(arrondi) },
     }),
@@ -136,11 +149,13 @@ export const estimerGains = (
   const enCentiemesDeTempsPlein = (duree: number): number =>
     Math.round((duree * CENT) / secondesTempsPlein);
 
+  const secondesActuelles = secondes((g) => g.tempsActuelParAn);
   const secondesGagneesBas = secondes((g) => g.tempsGagneParAn.bas);
   const secondesGagneesHaut = secondes((g) => g.tempsGagneParAn.haut);
 
   const total: TotalDesGains = {
-    tempsActuelParAn: Duree.arrondie(secondes((g) => g.tempsActuelParAn)),
+    tempsActuelParAn: Duree.arrondie(secondesActuelles),
+    valeurActuelleParAn: Montant.arrondi(centimes((g) => g.valeurActuelleParAn)),
     tempsGagneParAn: {
       bas: Duree.arrondie(secondesGagneesBas),
       haut: Duree.arrondie(secondesGagneesHaut),
@@ -149,6 +164,7 @@ export const estimerGains = (
       bas: Montant.arrondi(centimes((g) => g.valeurGagneeParAn.bas)),
       haut: Montant.arrondi(centimes((g) => g.valeurGagneeParAn.haut)),
     },
+    equivalentsTempsPleinActuels: enCentiemesDeTempsPlein(secondesActuelles),
     equivalentsTempsPleinLiberes: {
       bas: enCentiemesDeTempsPlein(secondesGagneesBas),
       haut: enCentiemesDeTempsPlein(secondesGagneesHaut),
