@@ -54,3 +54,15 @@ export type {
   ProfilDAutomatisation,
 } from './conception/ProfilDAutomatisation.js';
 export type { NiveauDAutomatisation } from './conception/reglesDeConception.js';
+
+export { DateLocale, type DateInvalide } from './diagnostic/DateLocale.js';
+export {
+  Diagnostic,
+  type DiagnosticInvalide,
+  type ProcessusDuDiagnostic,
+} from './diagnostic/Diagnostic.js';
+export { Prospect, type ProspectInvalide } from './diagnostic/Prospect.js';
+
+export { construireDeck } from './deck/construireDeck.js';
+export type * from './deck/Diapositive.js';
+export type { Chantier } from './deck/ordonnerLesChantiers.js';
