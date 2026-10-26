@@ -16,4 +16,16 @@ export class Pourcentage {
     if (valeur < 0 || valeur > 100) return err({ kind: 'PourcentageHorsBornes', valeur });
     return ok(new Pourcentage(valeur));
   }
+
+  /**
+   * Pour une valeur fixée par le domaine (taux par défaut, résultat de calcul), pas pour une
+   * saisie : une valeur hors bornes ne peut venir que d'un bug, d'où une exception.
+   */
+  static arrondi(valeur: number): Pourcentage {
+    const arrondie = Math.round(valeur);
+    if (!Number.isFinite(arrondie) || arrondie < 0 || arrondie > 100) {
+      throw new RangeError(`Pourcentage calculé invalide : ${String(valeur)}`);
+    }
+    return new Pourcentage(arrondie);
+  }
 }
