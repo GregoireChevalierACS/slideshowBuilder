@@ -76,6 +76,13 @@ export default tseslint.config(
     files: ['packages/domain/src/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', { patterns: IMPORTS_INTERDITS_DANS_LE_DOMAINE }],
+    },
+  },
+  {
+    // Les tests peuvent se servir du calendrier de JavaScript comme oracle.
+    files: ['packages/domain/src/**/*.ts'],
+    ignores: ['**/*.test.ts'],
+    rules: {
       'no-restricted-syntax': ['error', ...SOURCES_DE_NON_DETERMINISME],
     },
   },
