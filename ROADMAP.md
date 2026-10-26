@@ -6,7 +6,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------- |
 | **0. Socle**                | Monorepo pnpm, TypeScript strict, ESLint, dependency-cruiser, Husky, commitlint, CI, ADR                                  | Un commit mal formé ou un import interdit fait échouer la CI                                           | terminée |
 | **1. Calcul des gains**     | Value Objects (`Durée`, `Montant`, `Fréquence`, `Effectif`…), `EstimationDeGain`, Strategies de coût, Stryker, fast-check | 100 % de couverture, score de mutation ≥ 80 %, propriétés vertes, scénarios de référence justifiés     | terminée |
-| **2. Conception**           | Catalogue de `Brique`, Specifications d'automatisabilité, `ArchitectureProposée`                                          | Un jeu de processus types (devis, facturation, mails entrants, relances) donne l'architecture attendue | à venir  |
+| **2. Conception**           | Catalogue de `Brique`, Specifications d'automatisabilité, `ArchitectureProposée`                                          | Un jeu de processus types (devis, facturation, mails entrants, relances) donne l'architecture attendue | terminée |
 | **3. Construction du deck** | `Diagnostic` figé et versionné → liste de `Diapositive` selon les paramètres (public, durée)                              | Même diagnostic + mêmes paramètres ⇒ même deck (propriété)                                             | à venir  |
 | **4. Persistance, serveur** | SQLite, migrations, dépôts, contract tests Fake/SQLite, zod, Problem Details                                              | La suite de contrats passe sur les deux adapters, le smoke test du build passe                         | à venir  |
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | à venir  |
@@ -25,3 +25,9 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Les accès indexés (`tableau[i] ?? 0`) créaient des branches inatteignables avec `noUncheckedIndexedAccess`, détectées par le seuil de couverture des branches : l'arrondi renvoie désormais chaque élément avec sa valeur arrondie.
 - Une alerte de cohérence signale les fréquences d'équipe saisies par personne (plus d'un temps plein par an sur une seule tâche).
 - **Bug trouvé par fast-check** : le total dépendait de l'ordre de saisie quand la somme exacte tombait sur ,5 (l'addition flottante n'est pas associative). Les valeurs sont désormais additionnées dans un ordre canonique ; le contre-exemple est conservé comme test de régression.
+
+## Phase 2 — notes
+
+- Conception : voir [ADR 0005](docs/adr/0005-conception-par-regles-composables.md). Catalogue de 21 briques, dont signature électronique, paiement en ligne, synchronisation d'agenda et deux briques d'IA.
+- Stryker a révélé que les textes de justification, lus par le client, n'étaient pas testés : ils font désormais partie du contrat.
+- Correctif de sécurité : `qs` forcé en 6.16.0 (dépendance transitive de Stryker épinglée en 6.15.1).

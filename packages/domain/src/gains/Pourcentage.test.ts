@@ -27,6 +27,23 @@ describe('Pourcentage', () => {
     });
   });
 
+  describe('fixé par le domaine (taux par défaut, résultats de calcul)', () => {
+    it.each([
+      [0, 0],
+      [70, 70],
+      [100, 100],
+      [69.5, 70],
+    ])('%s devient %s %', (valeur, attendu) => {
+      expect(Pourcentage.arrondi(valeur).valeur).toBe(attendu);
+    });
+
+    it.each([-0.6, 100.6, Number.NaN])('signale un bug pour %s %', (valeur) => {
+      expect(() => Pourcentage.arrondi(valeur)).toThrow(
+        new RangeError(`Pourcentage calculé invalide : ${String(valeur)}`),
+      );
+    });
+  });
+
   it('conserve exactement tout entier entre 0 et 100', () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 100 }), (valeur) => {

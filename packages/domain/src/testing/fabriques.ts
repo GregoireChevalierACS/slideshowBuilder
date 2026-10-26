@@ -3,6 +3,8 @@
 // échouer le chargement sans faire échouer de test, et Stryker le compterait à tort comme survivant.
 
 import type { Result } from '../Result.js';
+import { Outil, type CategorieDOutil, type ModeDAcces } from '../conception/Outil.js';
+import type { ProfilDAutomatisation } from '../conception/ProfilDAutomatisation.js';
 import { CoutHoraire } from '../gains/CoutHoraire.js';
 import { Duree } from '../gains/Duree.js';
 import { Effectif } from '../gains/Effectif.js';
@@ -53,3 +55,21 @@ export const unProcessus = (description: DescriptionDeProcessus = {}): Processus
     }),
   );
 };
+
+export const unOutil = (
+  acces: ModeDAcces = 'api',
+  categorie: CategorieDOutil = 'facturation',
+  nom = `Logiciel (${acces})`,
+): Outil => valeurDe(Outil.creer({ nom, categorie, acces }));
+
+/** Profil de référence : un transfert entre deux outils à API, sans décision humaine. */
+export const unProfil = (
+  surcharges: Partial<ProfilDAutomatisation> = {},
+): ProfilDAutomatisation => ({
+  nature: 'transfert',
+  source: unOutil('api', 'crm', 'CRM'),
+  cible: unOutil('api', 'facturation', 'Facturation'),
+  donnees: 'structurees',
+  decisionHumaine: 'aucune',
+  ...surcharges,
+});
