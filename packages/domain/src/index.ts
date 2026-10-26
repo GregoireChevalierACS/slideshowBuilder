@@ -22,3 +22,35 @@ export {
   type DescriptionDeProcessusRedondant,
   type ProcessusInvalide,
 } from './gains/ProcessusRedondant.js';
+
+export {
+  brique,
+  CATALOGUE_DE_BRIQUES,
+  type Brique,
+  type FamilleDeBrique,
+  type IdDeBrique,
+} from './conception/Brique.js';
+export {
+  concevoirArchitecture,
+  type ArchitectureProposee,
+  type BriqueDeLArchitecture,
+  type ProcessusAConcevoir,
+} from './conception/concevoirArchitecture.js';
+export {
+  concevoirSolution,
+  type Justification,
+  type SolutionProposee,
+} from './conception/concevoirSolution.js';
+export {
+  Outil,
+  type CategorieDOutil,
+  type ModeDAcces,
+  type OutilInvalide,
+} from './conception/Outil.js';
+export type {
+  DecisionHumaine,
+  FormeDesDonnees,
+  NatureDeTache,
+  ProfilDAutomatisation,
+} from './conception/ProfilDAutomatisation.js';
+export type { NiveauDAutomatisation } from './conception/reglesDeConception.js';
