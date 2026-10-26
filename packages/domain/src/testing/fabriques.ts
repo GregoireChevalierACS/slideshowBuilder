@@ -5,6 +5,9 @@
 import type { Result } from '../Result.js';
 import { Outil, type CategorieDOutil, type ModeDAcces } from '../conception/Outil.js';
 import type { ProfilDAutomatisation } from '../conception/ProfilDAutomatisation.js';
+import { DateLocale } from '../diagnostic/DateLocale.js';
+import { Diagnostic, type ProcessusDuDiagnostic } from '../diagnostic/Diagnostic.js';
+import { Prospect } from '../diagnostic/Prospect.js';
 import { CoutHoraire } from '../gains/CoutHoraire.js';
 import { Duree } from '../gains/Duree.js';
 import { Effectif } from '../gains/Effectif.js';
@@ -73,3 +76,21 @@ export const unProfil = (
   decisionHumaine: 'aucune',
   ...surcharges,
 });
+
+export const unProcessusDuDiagnostic = (
+  processus: DescriptionDeProcessus = {},
+  profil: Partial<ProfilDAutomatisation> = {},
+): ProcessusDuDiagnostic => ({ processus: unProcessus(processus), profil: unProfil(profil) });
+
+export const unDiagnostic = (
+  processus: readonly ProcessusDuDiagnostic[] = [unProcessusDuDiagnostic()],
+  prospect: Parameters<typeof Prospect.creer>[0] = { nom: 'Négoce Durand' },
+): Diagnostic =>
+  valeurDe(
+    Diagnostic.creer({
+      prospect: valeurDe(Prospect.creer(prospect)),
+      dateDEntretien: valeurDe(DateLocale.depuisIso('2026-10-26')),
+      hypotheses: desHypotheses(),
+      processus,
+    }),
+  );

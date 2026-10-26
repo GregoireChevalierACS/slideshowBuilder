@@ -65,6 +65,17 @@ describe('estimerGains', () => {
     it('convertit le temps gagné en équivalents temps plein, en centièmes : 425,6 h et 547,2 h / 1 607 h', () => {
       expect(estimer([{}]).total.equivalentsTempsPleinLiberes).toStrictEqual({ bas: 26, haut: 34 });
     });
+
+    it('chiffre le coût du temps passé aujourd’hui : 608 h × 35 € = 21 280 €', () => {
+      const { parProcessus, total } = estimer([{}]);
+
+      expect(parProcessus[0]?.valeurActuelleParAn.enCentimes).toBe(2_128_000);
+      expect(total.valeurActuelleParAn.enCentimes).toBe(2_128_000);
+    });
+
+    it('convertit le temps passé aujourd’hui en équivalents temps plein : 608 h / 1 607 h = 0,38', () => {
+      expect(estimer([{}]).total.equivalentsTempsPleinActuels).toBe(38);
+    });
   });
 
   it('valorise au coût déduit du salaire : 40 000 € brut × 1,45 / 1 607 h', () => {
@@ -103,7 +114,9 @@ describe('estimerGains', () => {
         tempsActuelParAn: { enSecondes: 0 },
         tempsGagneParAn: { bas: { enSecondes: 0 }, haut: { enSecondes: 0 } },
         valeurGagneeParAn: { bas: { enCentimes: 0 }, haut: { enCentimes: 0 } },
+        valeurActuelleParAn: { enCentimes: 0 },
         equivalentsTempsPleinLiberes: { bas: 0, haut: 0 },
+        equivalentsTempsPleinActuels: 0,
       },
       alertes: [],
     });
@@ -167,7 +180,8 @@ describe('estimerGains', () => {
             somme((l) => l.valeurGagneeParAn.bas.enCentimes) ===
               total.valeurGagneeParAn.bas.enCentimes &&
             somme((l) => l.valeurGagneeParAn.haut.enCentimes) ===
-              total.valeurGagneeParAn.haut.enCentimes
+              total.valeurGagneeParAn.haut.enCentimes &&
+            somme((l) => l.valeurActuelleParAn.enCentimes) === total.valeurActuelleParAn.enCentimes
           );
         }),
       );
@@ -181,7 +195,9 @@ describe('estimerGains', () => {
             total.tempsGagneParAn.bas.enSecondes <= total.tempsGagneParAn.haut.enSecondes &&
             total.tempsGagneParAn.haut.enSecondes <= total.tempsActuelParAn.enSecondes &&
             total.valeurGagneeParAn.bas.enCentimes <= total.valeurGagneeParAn.haut.enCentimes &&
-            total.equivalentsTempsPleinLiberes.bas <= total.equivalentsTempsPleinLiberes.haut
+            total.valeurGagneeParAn.haut.enCentimes <= total.valeurActuelleParAn.enCentimes &&
+            total.equivalentsTempsPleinLiberes.bas <= total.equivalentsTempsPleinLiberes.haut &&
+            total.equivalentsTempsPleinLiberes.haut <= total.equivalentsTempsPleinActuels
           );
         }),
       );
