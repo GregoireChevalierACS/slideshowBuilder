@@ -29,11 +29,11 @@ export default {
     {
       name: 'api-publique-seulement',
       comment:
-        "Un paquet n'importe un autre paquet du dépôt que par son index.ts, jamais par ses fichiers internes.",
+        "Un paquet n'importe un autre paquet du dépôt que par ses points d'entrée (index.ts, et testing/index.ts réservé aux tests), jamais par ses fichiers internes.",
       severity: 'error',
       from: { path: '^(packages|apps)/([^/]+)/' },
       to: {
-        path: '^packages/([^/]+)/src/(?!index\\.ts$)',
+        path: '^packages/([^/]+)/src/(?!(testing/)?index\\.ts$)',
         pathNot: '^packages/$2/',
       },
     },
@@ -43,7 +43,8 @@ export default {
       severity: 'error',
       from: { pathNot: '^apps/server/src/database/' },
       to: {
-        path: 'node_modules/(better-sqlite3|kysely)/|^node:sqlite$',
+        // Un module natif de Node apparaît sans son préfixe « node: » dans le graphe.
+        path: 'node_modules/(better-sqlite3|kysely)/|^(node:)?sqlite$',
         dependencyTypesNot: ['type-only'],
       },
     },

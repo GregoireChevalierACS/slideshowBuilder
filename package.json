@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "husky",
     "lint": "eslint . --max-warnings=0",
-    "lint:architecture": "depcruise packages --config .dependency-cruiser.mjs",
+    "lint:architecture": "depcruise packages apps --config .dependency-cruiser.mjs",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc -p tsconfig.json && pnpm -r --parallel typecheck",
@@ -17,7 +17,9 @@
     "test:coverage": "vitest run --coverage",
     "build": "pnpm -r build",
     "commits:check": "node scripts/verifier-commits.mjs",
-    "test:mutation": "pnpm --filter @slideshow/domain test:mutation"
+    "test:mutation": "pnpm --filter @slideshow/domain test:mutation",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "start": "pnpm --filter @slideshow/server start"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
