@@ -14,6 +14,13 @@ export default defineConfig({
       thresholds: {
         // Le domaine porte les chiffres présentés au client : rien n'y échappe aux tests.
         'packages/domain/src/**': { lines: 100, branches: 100, functions: 100, statements: 100 },
+        // La couche application traduit les saisies et orchestre : chaque branche est un cas métier.
+        'packages/application/src/**': {
+          lines: 100,
+          branches: 100,
+          functions: 100,
+          statements: 100,
+        },
       },
     },
   },
