@@ -61,6 +61,9 @@ jobs:
       - name: Build de production
         run: pnpm build
 
+      - name: Smoke test de l’API compilée
+        run: pnpm test:smoke
+
       - name: Test de mutation
         run: pnpm test:mutation
 

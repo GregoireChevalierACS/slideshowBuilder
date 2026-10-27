@@ -58,6 +58,45 @@ describe('Diagnostic', () => {
     });
   });
 
+  describe('restauration depuis le stockage', () => {
+    const contenu = () => ({
+      prospect: unProspect(),
+      dateDEntretien: leVingtSixOctobre(),
+      hypotheses: desHypotheses(),
+      processus: [un('Relances')],
+    });
+
+    it('retrouve la version enregistrée', () => {
+      expect(valeurDe(Diagnostic.restaurer(contenu(), 7)).version).toBe(7);
+    });
+
+    it('accepte la première version', () => {
+      expect(valeurDe(Diagnostic.restaurer(contenu(), 1)).version).toBe(1);
+    });
+
+    it('se révise ensuite à partir de cette version', () => {
+      const restaure = valeurDe(Diagnostic.restaurer(contenu(), 7));
+
+      expect(valeurDe(restaure.reviser({})).version).toBe(8);
+    });
+
+    it.each([0, -1, 2.5])('refuse la version %s', (version) => {
+      expect(Diagnostic.restaurer(contenu(), version)).toStrictEqual({
+        ok: false,
+        error: { kind: 'VersionInvalide', valeur: version },
+      });
+    });
+
+    it('vérifie les mêmes règles qu’à la création', () => {
+      expect(
+        Diagnostic.restaurer({ ...contenu(), processus: [un('A'), un('a')] }, 3),
+      ).toStrictEqual({
+        ok: false,
+        error: { kind: 'NomDeProcessusEnDouble', nom: 'a' },
+      });
+    });
+  });
+
   describe('révision', () => {
     it('crée une nouvelle version sans toucher à la précédente', () => {
       const v1 = unDiagnostic();

@@ -16,12 +16,11 @@ export interface ProcessusDuDiagnostic {
   readonly profil: ProfilDAutomatisation;
 }
 
-export interface DiagnosticInvalide {
-  readonly kind: 'NomDeProcessusEnDouble';
-  readonly nom: string;
-}
+export type DiagnosticInvalide =
+  | { readonly kind: 'NomDeProcessusEnDouble'; readonly nom: string }
+  | { readonly kind: 'VersionInvalide'; readonly valeur: number };
 
-interface ContenuDuDiagnostic {
+export interface ContenuDuDiagnostic {
   readonly prospect: Prospect;
   readonly dateDEntretien: DateLocale;
   readonly hypotheses: HypothesesDeCalcul;
@@ -64,6 +63,17 @@ export class Diagnostic implements ContenuDuDiagnostic {
 
   static creer(contenu: ContenuDuDiagnostic): Result<Diagnostic, DiagnosticInvalide> {
     return Diagnostic.valider(contenu, 1);
+  }
+
+  /** Pour le stockage : retrouve une version déjà enregistrée, avec les mêmes règles. */
+  static restaurer(
+    contenu: ContenuDuDiagnostic,
+    version: number,
+  ): Result<Diagnostic, DiagnosticInvalide> {
+    if (!Number.isInteger(version) || version < 1) {
+      return err({ kind: 'VersionInvalide', valeur: version });
+    }
+    return Diagnostic.valider(contenu, version);
   }
 
   private static valider(

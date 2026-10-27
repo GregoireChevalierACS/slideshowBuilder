@@ -58,6 +58,7 @@ export type { NiveauDAutomatisation } from './conception/reglesDeConception.js';
 export { DateLocale, type DateInvalide } from './diagnostic/DateLocale.js';
 export {
   Diagnostic,
+  type ContenuDuDiagnostic,
   type DiagnosticInvalide,
   type ProcessusDuDiagnostic,
 } from './diagnostic/Diagnostic.js';
