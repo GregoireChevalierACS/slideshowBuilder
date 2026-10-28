@@ -20,7 +20,8 @@
     "test:mutation": "pnpm --filter @slideshow/domain test:mutation",
     "test:smoke": "node scripts/smoke-test.mjs",
     "start": "pnpm --filter @slideshow/server start",
-    "dev:web": "pnpm --filter @slideshow/web dev"
+    "dev:web": "pnpm --filter @slideshow/web dev",
+    "test:e2e": "pnpm --filter @slideshow/web test:e2e"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
