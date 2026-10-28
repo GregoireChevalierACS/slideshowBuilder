@@ -132,3 +132,147 @@ kbd {
   padding: 8px 16px 8px 0;
   text-align: left;
 }
+
+/* --- Écran d'entretien : processus | formulaire | en direct --- */
+
+.entretien {
+  max-width: 1600px;
+}
+
+.entete-de-l-entretien {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.entete-de-l-entretien h1 {
+  margin: 0;
+  flex: 1;
+}
+
+.colonnes {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .colonnes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.liste-des-processus ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.liste-des-processus button {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 6px;
+}
+
+.liste-des-processus button[aria-current='true'] {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.formulaire-du-processus,
+.formulaire-des-hypotheses {
+  display: grid;
+  gap: 12px;
+}
+
+.section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  padding: 12px 16px 16px;
+  background: var(--surface);
+}
+
+.section legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.section .outil {
+  display: contents;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saisie-avec-unite {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.saisie-avec-unite input {
+  width: 100%;
+}
+
+.unite,
+.aide,
+.suggestion {
+  color: var(--discret);
+}
+
+.suggestion {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+[aria-invalid='true'] {
+  border-color: var(--alerte);
+}
+
+.erreur-de-champ {
+  font-size: 0.9em;
+}
+
+.panneau-en-direct {
+  position: sticky;
+  top: 16px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--surface);
+}
+
+.panneau-en-direct h2 {
+  margin-top: 0;
+  font-size: 1.1em;
+}
+
+.briques {
+  padding-left: 18px;
+  color: var(--discret);
+}
+
+.ia {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.a-completer {
+  color: var(--discret);
+}
+
+.bandeau-de-conflit {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--alerte);
+  border-radius: 6px;
+}

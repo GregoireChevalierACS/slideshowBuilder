@@ -48,9 +48,8 @@ describe('App', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Nouveau diagnostic/ }));
     await userEvent.keyboard('Négoce Durand{Enter}');
 
-    expect(
-      await screen.findByRole('heading', { name: /Négoce Durand · version 4/ }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Négoce Durand' })).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Enregistré · version 4');
     expect(consulter).toHaveBeenCalledWith('nouveau');
   });
 
