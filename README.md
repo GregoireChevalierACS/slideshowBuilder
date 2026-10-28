@@ -17,8 +17,10 @@ pnpm install          # installe les dépendances et active les hooks Git
 pnpm test             # tests
 pnpm test:coverage    # tests + couverture (100 % exigés partout)
 pnpm build            # compile les paquets et le serveur
-pnpm start            # lance l'API sur http://127.0.0.1:4321/api/diagnostics
+pnpm start            # lance l'application sur http://127.0.0.1:4321
 ```
+
+En développement, l'interface se recharge à chaque modification : lancer `pnpm start` dans un terminal, puis `pnpm dev:web` dans un autre, et ouvrir l'adresse affichée par Vite (les appels à `/api` sont relayés vers le serveur).
 
 La configuration se fait par variables d'environnement ou par un fichier `apps/server/.env` (modèle : [.env.example](apps/server/.env.example)). La base SQLite est créée au premier démarrage dans `apps/server/data/` : c'est le fichier à sauvegarder pour conserver les diagnostics.
 
@@ -35,6 +37,7 @@ Les mêmes commandes tournent en CI ([ci.yml](.github/workflows/ci.yml)) :
 | `pnpm test:coverage`     | Tests et seuils de couverture                          |
 | `pnpm build`             | Build de production des paquets                        |
 | `pnpm test:smoke`        | L'API compilée démarre, enregistre et relit            |
+| `pnpm test:e2e`          | Un entretien complet au clavier seul (Playwright)      |
 | `pnpm test:mutation`     | Test de mutation du domaine (Stryker, seuil 80 %)      |
 | `pnpm commits:check`     | Format des commits : `yyyy-mm-dd # N : (type) message` |
 
@@ -45,6 +48,7 @@ Les hooks Git refusent tout commit direct sur `main` et tout message mal formé.
 - **`ERR_PNPM_UNSUPPORTED_ENGINE`** : la version de Node est trop ancienne. Installer Node 24, puis rouvrir le terminal.
 - **Un hook échoue avec « pnpm introuvable »** : le terminal a été ouvert avant l'installation de Node. Le rouvrir.
 - **`Configuration invalide` au démarrage** : le message liste chaque variable en cause. Corriger `apps/server/.env`.
+- **`pnpm test:e2e` ne trouve pas de navigateur** : l'installer une fois avec `pnpm --filter @slideshow/web exec playwright install chromium`. Le parcours tourne contre le livrable : lancer `pnpm build` avant.
 - **`EADDRINUSE`** : le port est déjà pris, sans doute par une autre instance. Changer `PORT` ou arrêter l'autre instance.
 
 ## Documentation

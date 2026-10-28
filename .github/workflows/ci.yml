@@ -64,6 +64,20 @@ jobs:
       - name: Smoke test de l’API compilée
         run: pnpm test:smoke
 
+      - name: Navigateur des tests de bout en bout
+        run: pnpm --filter @slideshow/web exec playwright install --with-deps chromium
+
+      - name: Parcours de bout en bout au clavier
+        run: pnpm test:e2e
+
+      - name: Rapport du parcours
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-e2e
+          path: apps/web/playwright-report/
+          if-no-files-found: ignore
+
       - name: Test de mutation
         run: pnpm test:mutation
 

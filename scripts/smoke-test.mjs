@@ -47,7 +47,11 @@ try {
   const liste = await (await fetch(BASE)).json();
   verifier(liste.length === 1 && liste[0].prospect === 'Smoke test', 'liste inattendue');
 
-  console.log('✔ L’API compilée démarre, enregistre et relit un diagnostic.');
+  const page = await fetch(`http://127.0.0.1:${PORT}/`);
+  const html = await page.text();
+  verifier(page.ok && html.includes('id="racine"'), 'interface non servie à la racine');
+
+  console.log('✔ L’API compilée démarre, enregistre, relit un diagnostic et sert l’interface.');
 } catch (erreur) {
   console.error(`✖ ${erreur.message}`);
   process.exitCode = 1;

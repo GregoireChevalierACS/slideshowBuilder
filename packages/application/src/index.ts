@@ -22,3 +22,20 @@ export {
 export { decrireLeDiagnostic } from './saisie/decrireLeDiagnostic.js';
 export { lireLaSaisie, type ErreurDuDomaine, type SaisieInvalide } from './saisie/lireLaSaisie.js';
 export type * from './saisie/SaisieDeDiagnostic.js';
+export {
+  appliquerLeModele,
+  MODELES_DE_PROCESSUS,
+  suggererLesTaux,
+  type ModeleDeProcessus,
+  type SuggestionDeTaux,
+} from './modeles/modelesDeProcessus.js';
+export {
+  schemaDeDiagnosticPublie,
+  schemaDeProspect,
+  schemaDeResumeDeDiagnostic,
+  schemaDeRevision,
+  schemaDesModifications,
+  schemaDeSaisieDeDiagnostic,
+  schemaDesParametresDuDeck,
+  schemaDeVersion,
+} from './schemas.js';

@@ -9,9 +9,15 @@ export default defineConfig({
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
-      include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts'],
+      include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.{ts,tsx}'],
       // main.ts est la composition root : il est vérifié par le smoke test de l'API compilée.
-      exclude: ['**/*.test.ts', '**/index.ts', '**/testing/**', 'apps/server/src/main.ts'],
+      exclude: [
+        '**/*.test.{ts,tsx}',
+        '**/index.ts',
+        '**/testing/**',
+        'apps/server/src/main.ts',
+        'apps/web/src/main.tsx',
+      ],
       reporter: ['text', 'html'],
       reportsDirectory: 'coverage',
       thresholds: {
@@ -21,6 +27,8 @@ export default defineConfig({
         'packages/application/src/**': TOUT,
         // Le serveur traduit HTTP et SQL : chaque branche est un statut ou une contrainte.
         'apps/server/src/**': TOUT,
+        // L'interface est testée par ses comportements (Testing Library) et par le parcours E2E.
+        'apps/web/src/**': TOUT,
       },
     },
   },
