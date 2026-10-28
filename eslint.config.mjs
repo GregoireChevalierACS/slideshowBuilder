@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 // Ce que le domaine n'a pas le droit d'importer. dependency-cruiser vérifie le graphe complet
@@ -85,6 +86,12 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': ['error', ...SOURCES_DE_NON_DETERMINISME],
     },
+  },
+  {
+    // Interface : règles des hooks React (dépendances des effets, appels conditionnels).
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended],
+    languageOptions: { globals: globals.browser },
   },
   {
     // Fichiers de configuration et scripts en JavaScript : pas de typage à exploiter.
