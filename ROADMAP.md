@@ -9,7 +9,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **2. Conception**           | Catalogue de `Brique`, Specifications d'automatisabilité, `ArchitectureProposée`                                          | Un jeu de processus types (devis, facturation, mails entrants, relances) donne l'architecture attendue | terminée |
 | **3. Construction du deck** | `Diagnostic` figé et versionné → liste de `Diapositive` selon les paramètres (public, durée)                              | Même diagnostic + mêmes paramètres ⇒ même deck (propriété)                                             | terminée |
 | **4. Persistance, serveur** | SQLite, migrations, dépôts, contract tests Fake/SQLite, zod, Problem Details                                              | La suite de contrats passe sur les deux adapters, le smoke test du build passe                         | terminée |
-| **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | à venir  |
+| **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | en cours |
 | **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | à venir  |
 | **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | à venir  |
 
@@ -45,3 +45,8 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Couverture de 100 % exigée aussi sur la couche application.
 - Serveur : voir [ADR 0008](docs/adr/0008-serveur-http-local.md). `node:sqlite`, migrations testées en aller-retour, contrat du dépôt rejoué sur SQLite, Fastify avec Problem Details et contrôle de l'en-tête `Host`.
 - Le smoke test a révélé que tsdown produit `main.mjs` ; sous Windows, le fichier SQLite reste verrouillé tant que le processus n'est pas terminé.
+
+## Phase 5 — notes
+
+- Interface : voir [ADR 0009](docs/adr/0009-interface-web.md). Accueil, ouverture d'un diagnostic, paramètres des raccourcis, 13 modèles de processus (taux suggérés par la conception), contrat d'échange partagé et vérifié côté serveur.
+- À venir : l'écran d'entretien (processus, panneau en direct, sauvegarde automatique, 409) et le parcours E2E au clavier.

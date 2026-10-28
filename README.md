@@ -17,8 +17,10 @@ pnpm install          # installe les dépendances et active les hooks Git
 pnpm test             # tests
 pnpm test:coverage    # tests + couverture (100 % exigés partout)
 pnpm build            # compile les paquets et le serveur
-pnpm start            # lance l'API sur http://127.0.0.1:4321/api/diagnostics
+pnpm start            # lance l'application sur http://127.0.0.1:4321
 ```
+
+En développement, l'interface se recharge à chaque modification : lancer `pnpm start` dans un terminal, puis `pnpm dev:web` dans un autre, et ouvrir l'adresse affichée par Vite (les appels à `/api` sont relayés vers le serveur).
 
 La configuration se fait par variables d'environnement ou par un fichier `apps/server/.env` (modèle : [.env.example](apps/server/.env.example)). La base SQLite est créée au premier démarrage dans `apps/server/data/` : c'est le fichier à sauvegarder pour conserver les diagnostics.
 
