@@ -1,4 +1,4 @@
-import type { SaisieDeDiagnostic } from '@slideshow/application';
+import type { SaisieDeDiagnostic } from './saisie/SaisieDeDiagnostic.js';
 import type {
   CategorieDOutil,
   DecisionHumaine,
@@ -12,7 +12,8 @@ import type {
 import { z } from 'zod';
 
 // Validation de structure (types, champs présents, choix fermés) : le premier des trois niveaux.
-// Les règles métier (bornes, cohérence) restent au domaine.
+// Les règles métier (bornes, cohérence) restent au domaine. Partagée par le serveur (requêtes,
+// stock) et l'interface (réponses) : c'est le contrat d'échange du format de saisie.
 
 /**
  * Énumération qui doit lister exactement les choix du domaine : une valeur ajoutée au domaine et
@@ -92,22 +93,20 @@ export const schemaDeProspect = z.strictObject({
   effectifTotal: entier.exactOptional(),
 });
 
-const champsRevisables = {
+export const schemaDesModifications = z.strictObject({
   prospect: schemaDeProspect,
   hypotheses: z.strictObject({
     joursTravaillesParAn: entier,
     heuresAnnuellesTempsPlein: entier,
   }),
   processus: z.array(schemaDeProcessus).max(100),
-};
+});
 
-export const schemaDeSaisieDeDiagnostic = z.strictObject({
-  ...champsRevisables,
+export const schemaDeSaisieDeDiagnostic = schemaDesModifications.extend({
   dateDEntretien: z.string(),
 }) satisfies z.ZodType<SaisieDeDiagnostic>;
 
-export const schemaDeRevision = z.strictObject({
-  ...champsRevisables,
+export const schemaDeRevision = schemaDesModifications.extend({
   /** La version que l'utilisateur a sous les yeux (concurrence optimiste). */
   versionAttendue: entier,
 });
@@ -120,4 +119,20 @@ export const schemaDesParametresDuDeck = z.strictObject({
 
 export const schemaDeVersion = z.strictObject({
   version: z.coerce.number().int().exactOptional(),
+});
+
+// Réponses de l'API : le client les valide à la réception, les tests du serveur vérifient que
+// chaque réponse réelle les respecte.
+
+export const schemaDeResumeDeDiagnostic = z.strictObject({
+  id: z.string(),
+  prospect: z.string(),
+  dateDEntretien: z.string(),
+  derniereVersion: entier,
+});
+
+export const schemaDeDiagnosticPublie = z.strictObject({
+  id: z.string(),
+  version: entier,
+  saisie: schemaDeSaisieDeDiagnostic,
 });

@@ -1,18 +1,17 @@
 import {
   decrireLeDiagnostic,
   lireUnIdDeDiagnostic,
-  type CasDUsage,
-  type IdDeDiagnostic,
-} from '@slideshow/application';
-import type { Diagnostic } from '@slideshow/domain';
-import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
-import { z } from 'zod';
-import {
   schemaDeProspect,
   schemaDeRevision,
   schemaDesParametresDuDeck,
   schemaDeVersion,
-} from '../schemas.js';
+  type CasDUsage,
+  type IdDeDiagnostic,
+} from '@slideshow/application';
+import type { Diagnostic } from '@slideshow/domain';
+import fastifyStatic from '@fastify/static';
+import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
+import { z } from 'zod';
 import {
   corpsIllisible,
   diagnosticIntrouvable,
@@ -42,9 +41,16 @@ const enReponse = (id: IdDeDiagnostic, diagnostic: Diagnostic) => ({
  */
 export const creerLApplication = (
   casDUsage: CasDUsage,
-  options: { readonly journalisation?: boolean } = {},
+  options: {
+    readonly journalisation?: boolean;
+    /** L'interface compilée (apps/web/dist), servie à la racine : un seul port en production. */
+    readonly dossierDeLInterface?: string;
+  } = {},
 ): FastifyInstance => {
   const app = Fastify({ logger: options.journalisation ?? false });
+  if (options.dossierDeLInterface !== undefined) {
+    void app.register(fastifyStatic, { root: options.dossierDeLInterface });
+  }
 
   app.addHook('onRequest', async (requete, reponse) => {
     if (!HOTES_AUTORISES.has(requete.hostname)) return envoyer(reponse, hoteRefuse());

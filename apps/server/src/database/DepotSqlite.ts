@@ -2,6 +2,7 @@ import {
   decrireLeDiagnostic,
   lireLaSaisie,
   lireUnIdDeDiagnostic,
+  schemaDeSaisieDeDiagnostic,
   type DepotDeDiagnostics,
   type IdDeDiagnostic,
   type ResumeDeDiagnostic,
@@ -10,7 +11,6 @@ import {
 import { err, ok, type Diagnostic, type Result } from '@slideshow/domain';
 import type { DatabaseSync } from 'node:sqlite';
 import { z } from 'zod';
-import { schemaDeSaisieDeDiagnostic } from '../schemas.js';
 
 // Les lignes renvoyées par node:sqlite ne sont pas typées : elles sont validées avant usage.
 const ligneDeVersion = z.object({ version: z.number().int(), saisie: z.string() });

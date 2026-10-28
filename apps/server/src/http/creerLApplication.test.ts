@@ -1,9 +1,17 @@
-import { creerLesCasDUsage, type CasDUsage } from '@slideshow/application';
+import {
+  creerLesCasDUsage,
+  schemaDeDiagnosticPublie,
+  schemaDeResumeDeDiagnostic,
+  type CasDUsage,
+} from '@slideshow/application';
 import {
   HorlogeFixe,
   IdentifiantsSequentiels,
   uneSaisieDeProcessus,
 } from '@slideshow/application/testing';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { DepotSqlite } from '../database/DepotSqlite.js';
@@ -34,6 +42,28 @@ const diapositives = (reponse: { body: string }) =>
     .diapositives;
 
 describe('API HTTP', () => {
+  it('respecte le contrat publié dans chacune de ses réponses réussies', async () => {
+    const app = uneApplication();
+    const ouverture = await ouvrir(app);
+    const revision = await app.inject({
+      method: 'PUT',
+      url: '/api/diagnostics/diagnostic-1',
+      payload: {
+        versionAttendue: 1,
+        prospect: { nom: 'Négoce Durand', secteur: 'Négoce', effectifTotal: 25 },
+        hypotheses: { joursTravaillesParAn: 228, heuresAnnuellesTempsPlein: 1_607 },
+        processus: [uneSaisieDeProcessus()],
+      },
+    });
+    const consultation = await app.inject({ method: 'GET', url: '/api/diagnostics/diagnostic-1' });
+    const liste = await app.inject({ method: 'GET', url: '/api/diagnostics' });
+
+    for (const reponse of [ouverture, revision, consultation]) {
+      expect(schemaDeDiagnosticPublie.safeParse(corps(reponse)).success).toBe(true);
+    }
+    expect(z.array(schemaDeResumeDeDiagnostic).safeParse(corps(liste)).success).toBe(true);
+  });
+
   describe('POST /api/diagnostics', () => {
     it('ouvre un diagnostic : 201, emplacement et version 1', async () => {
       const reponse = await ouvrir(uneApplication());
@@ -393,5 +423,35 @@ describe('API HTTP', () => {
       });
       expect(reponse.body).not.toContain('mot de passe');
     });
+  });
+});
+
+describe('interface compilée', () => {
+  const dossierDeLInterface = () => {
+    const dossier = mkdtempSync(join(tmpdir(), 'slideshow-web-'));
+    writeFileSync(join(dossier, 'index.html'), '<!doctype html><title>Interface de test</title>');
+    return dossier;
+  };
+
+  it('est servie à la racine, à côté de l’API', async () => {
+    const dossier = dossierDeLInterface();
+    const app = creerLApplication(
+      creerLesCasDUsage({
+        depot: new DepotSqlite(uneBaseEnMemoire()),
+        horloge: new HorlogeFixe(),
+        identifiants: new IdentifiantsSequentiels(),
+      }),
+      { dossierDeLInterface: dossier },
+    );
+
+    const page = await app.inject({ method: 'GET', url: '/' });
+    const api = await app.inject({ method: 'GET', url: '/api/diagnostics' });
+
+    expect(page.statusCode).toBe(200);
+    expect(page.headers['content-type']).toContain('text/html');
+    expect(page.body).toContain('Interface de test');
+    expect(api.statusCode).toBe(200);
+    await app.close();
+    rmSync(dossier, { recursive: true, force: true });
   });
 });
