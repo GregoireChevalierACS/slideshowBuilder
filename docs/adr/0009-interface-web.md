@@ -18,6 +18,13 @@ L'interface sert pendant l'entretien : saisie rapide au clavier, chiffres visibl
 - **En production, Fastify sert l'interface compilée** à la racine : une commande, un port, la même protection de l'en-tête `Host`. En développement, Vite relaie `/api` vers le serveur.
 - **Couverture de 100 %** exigée sur l'interface aussi, par ses comportements (Testing Library) ; `main.tsx` est vérifié par le smoke test et le parcours E2E.
 
+## Complément du 2026-10-28 : l'écran d'entretien
+
+- **Sauvegarde automatique** un court instant après la dernière frappe, seulement si le domaine accepte la saisie (sinon le champ fautif est désigné et rien n'est envoyé). Les enregistrements sont sérialisés et partent de la dernière version connue ; un 409 affiche un bandeau qui propose de recharger ; quitter la page avec des modifications non enregistrées demande confirmation.
+- **Les taux suivent la suggestion de la conception** quand le profil change, sauf si l'utilisateur s'en était écarté : un taux ajusté pendant l'entretien n'est jamais écrasé.
+- **Les chiffres en direct** sont ceux du domaine, calculés dans le navigateur pour le processus seul (avec les hypothèses du diagnostic) et pour l'ensemble.
+- **Critère de fin vérifié par un parcours Playwright** contre le livrable compilé, au clavier seul : ouverture, deux processus à partir de modèles, outils complétés, chiffres attendus, enregistrement et relecture après rechargement. Il a trouvé un vrai bug (un modèle réappliqué renommait le processus « … (2) » à cause de lui-même).
+
 ## Alternatives écartées
 
 - **Bibliothèque de composants (MUI, Chakra…)** : poids et dépendances disproportionnés pour quelques formulaires.
