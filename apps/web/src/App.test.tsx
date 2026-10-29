@@ -53,6 +53,19 @@ describe('App', () => {
     expect(consulter).toHaveBeenCalledWith('nouveau');
   });
 
+  it.each([
+    [
+      '#/diagnostics/nouveau/presentation?public=dirigeant&duree=courte',
+      'Présenter : Négoce Durand',
+    ],
+    ['#/diagnostics/nouveau/presentateur?public=dirigeant&duree=courte', 'Notes'],
+  ])('mène à l’écran de « %s »', async (ancre, titre) => {
+    window.location.hash = ancre;
+    render(<App client={unClient(diagnostic())} stockage={undefined} />);
+
+    expect(await screen.findByRole('heading', { name: titre })).toBeInTheDocument();
+  });
+
   it('explique pourquoi un diagnostic n’a pas pu être chargé', async () => {
     window.location.hash = '#/diagnostics/inconnu';
     render(

@@ -10,7 +10,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **3. Construction du deck** | `Diagnostic` figé et versionné → liste de `Diapositive` selon les paramètres (public, durée)                              | Même diagnostic + mêmes paramètres ⇒ même deck (propriété)                                             | terminée |
 | **4. Persistance, serveur** | SQLite, migrations, dépôts, contract tests Fake/SQLite, zod, Problem Details                                              | La suite de contrats passe sur les deux adapters, le smoke test du build passe                         | terminée |
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | terminée |
-| **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | à venir  |
+| **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | terminée |
 | **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | à venir  |
 
 ## Phase 0 — notes
@@ -53,3 +53,10 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Critère de fin vérifié : le parcours Playwright saisit un entretien complet au clavier seul, contre le livrable compilé, en quelques secondes.
 - Le parcours E2E a trouvé un vrai bug : au clavier, chaque lettre tapée dans la liste des modèles réappliquait le modèle, et le processus était renommé « … (2) » à cause de lui-même.
 - Les tests de composants ont révélé un défaut d'accessibilité : unité et message d'erreur étaient dans le libellé du champ, et polluaient son nom accessible.
+
+## Phase 6 — notes
+
+- Rendu : voir [ADR 0010](docs/adr/0010-rendu-de-la-presentation.md). Diapositives en `cqw`, pagination à l'affichage, schéma SVG maison, plein écran, vue présentateur synchronisée, PDF par l'impression du navigateur.
+- Critère « captures visuelles stables » remplacé par un contrôle E2E de débordement (diapositives et boîtes du schéma) sur un deck chargé, plus le comptage des pages du vrai PDF.
+- Le contrôle de débordement a trouvé la diapositive « Ce que nous avons observé » trop pleine (noms longs) ; des captures relues à l'œil ont trouvé le texte SVG du schéma qui sortait de ses boîtes, invisible pour le contrôle tant qu'il était en SVG, et des barres de gains écrasées par une mauvaise échelle.
+- Correctif de sécurité : `qs` 6.16.1.

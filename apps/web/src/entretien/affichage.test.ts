@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { enEuros, enEtp, enHeures, fourchette, messageDuChamp } from './affichage.js';
+import {
+  enEtp,
+  enEuros,
+  enEurosAuCentime,
+  enHeures,
+  fourchette,
+  messageDuChamp,
+} from './affichage.js';
 
 /** Intl sépare les milliers par une espace fine insécable : on compare avec des espaces simples. */
 const lisible = (texte: string) => texte.replace(/\s/g, ' ');
@@ -20,6 +27,10 @@ describe('affichage', () => {
     [99, '1 €'],
   ])('%s centimes s’affichent « %s »', (centimes, attendu) => {
     expect(lisible(enEuros(centimes))).toBe(attendu);
+  });
+
+  it('écrit un coût horaire au centime près', () => {
+    expect(lisible(enEurosAuCentime(5_800_000 / 1_607))).toBe('36,09 €');
   });
 
   it.each([

@@ -2,6 +2,8 @@ import type { ClientDeLApi } from './api/clientDeLApi.js';
 import { Accueil } from './ecrans/Accueil.js';
 import { Entretien } from './ecrans/Entretien.js';
 import { Parametres } from './ecrans/Parametres.js';
+import { Presentateur } from './ecrans/Presentateur.js';
+import { Presentation } from './ecrans/Presentation.js';
 import { lienVers, naviguer, useRoute } from './navigation.js';
 import { FournisseurDeRaccourcis } from './raccourcis/ContexteDesRaccourcis.js';
 
@@ -31,6 +33,12 @@ export const App = ({
       )}
       {route.ecran === 'parametres' && <Parametres />}
       {route.ecran === 'entretien' && <Entretien client={client} id={route.id} />}
+      {route.ecran === 'presentation' && (
+        <Presentation client={client} id={route.id} reglages={route.reglages} />
+      )}
+      {route.ecran === 'presentateur' && (
+        <Presentateur client={client} id={route.id} reglages={route.reglages} />
+      )}
     </FournisseurDeRaccourcis>
   );
 };

@@ -77,6 +77,16 @@ export const Entretien = ({
       <header className="entete-de-l-entretien">
         <a href={lienVers({ ecran: 'accueil' })}>← Diagnostics</a>
         <h1>{saisie.prospect.nom}</h1>
+        <a
+          className="bouton-presenter"
+          href={lienVers({
+            ecran: 'presentation',
+            id,
+            reglages: { public: 'dirigeant', duree: 'complete' },
+          })}
+        >
+          Présenter ▸
+        </a>
         <IndicateurDeSauvegarde
           sauvegarde={sauvegarde}
           recharger={() => {

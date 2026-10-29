@@ -20,6 +20,11 @@ export const enHeures = (secondes: number): string => {
 /** À l'euro près : des centimes n'ajoutent rien à une estimation présentée à un dirigeant. */
 export const enEuros = (centimes: number): string => euros.format(centimes / 100);
 
+const eurosAuCentime = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+
+/** Pour un coût horaire : 36,09 €/h ne se lit pas comme 36 €/h. */
+export const enEurosAuCentime = (centimes: number): string => eurosAuCentime.format(centimes / 100);
+
 export const enEtp = (centiemes: number): string =>
   `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(centiemes / 100)} ETP`;
 

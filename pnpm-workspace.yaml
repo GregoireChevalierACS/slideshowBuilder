@@ -7,7 +7,7 @@ packages:
 minimumReleaseAge: 4320
 
 overrides:
-  # typed-rest-client (dépendance de Stryker) épingle qs 6.15.1, touché par trois alertes de
-  # sécurité (déni de service). Override vers la version corrigée, compatible (mineure) ; à retirer
-  # quand typed-rest-client publiera une version à jour.
-  'typed-rest-client>qs': 6.16.0
+  # typed-rest-client 2.3.1 (dépendance de Stryker 10.0) épingle qs 6.15.1, touché par des alertes
+  # de déni de service (corrigées en 6.16.0, puis en 6.16.1 pour l'alerte du 2026-10-28). Override vers la dernière
+  # version corrigée, compatible ; à retirer quand Stryker passera à typed-rest-client 3 (qs ^6.16).
+  'typed-rest-client>qs': 6.16.1
