@@ -20,6 +20,10 @@ pnpm build            # compile les paquets et le serveur
 pnpm start            # lance l'application sur http://127.0.0.1:4321
 ```
 
+### Présenter
+
+Depuis l'écran d'entretien, **Présenter ▸** ouvre l'écran de lancement : choisir le public, la durée et la version, puis **Entrée** pour le plein écran (`→`, `Espace` ou `Page suivante` pour avancer, `←` pour revenir, `Échap` pour quitter). **Ouvrir la vue présentateur** affiche dans une seconde fenêtre les notes, la diapositive suivante et un chronomètre. **Exporter en PDF** ouvre l'impression du navigateur : choisir « Enregistrer en PDF » (une diapositive par page).
+
 En développement, l'interface se recharge à chaque modification : lancer `pnpm start` dans un terminal, puis `pnpm dev:web` dans un autre, et ouvrir l'adresse affichée par Vite (les appels à `/api` sont relayés vers le serveur).
 
 La configuration se fait par variables d'environnement ou par un fichier `apps/server/.env` (modèle : [.env.example](apps/server/.env.example)). La base SQLite est créée au premier démarrage dans `apps/server/data/` : c'est le fichier à sauvegarder pour conserver les diagnostics.
