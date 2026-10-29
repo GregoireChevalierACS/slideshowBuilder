@@ -59,17 +59,34 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
   return id;
 };
 
-/** Les diapositives dont le contenu dépasse le cadre 16:9 (hauteur ou largeur). */
-const diapositivesQuiDebordent = (page: Page) =>
+/**
+ * Les diapositives qui débordent du cadre 16:9, ou dont le contenu arrive à moins de 10 % de la
+ * hauteur du bas : les polices varient d'un système à l'autre (Windows, le Linux de la CI), une
+ * diapositive trop juste sur une machine déborde sur une autre.
+ */
+const diapositivesTropPleines = (page: Page) =>
   page.locator('.impression .diapositive').evaluateAll((diapositives) =>
     diapositives.flatMap((d, numero) => {
       const deborde = (e: Element) =>
         e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1;
       // La diapositive, son contenu, et chaque boîte du schéma d'architecture.
-      const fautifs = [d, ...d.querySelectorAll('.contenu-de-diapositive, .schema .boite')].filter(
-        deborde,
-      );
-      return fautifs.length === 0
+      const debordements = [
+        d,
+        ...d.querySelectorAll('.contenu-de-diapositive, .schema .boite'),
+      ].filter(deborde);
+      // 10 % : l'écart mesuré entre les polices de Windows et celles du Linux de la CI.
+      const reserve = 0.1 * d.getBoundingClientRect().height;
+      // Le schéma s'étire volontairement pour occuper la place : il n'a pas de réserve à garder.
+      const tropJustes = [
+        ...d.querySelectorAll('.contenu-de-diapositive:not(:has(.schema))'),
+      ].filter((contenu) => {
+        const dernier = contenu.lastElementChild;
+        return (
+          dernier !== null &&
+          contenu.getBoundingClientRect().bottom - dernier.getBoundingClientRect().bottom < reserve
+        );
+      });
+      return debordements.length + tropJustes.length === 0
         ? []
         : [`${String(numero + 1)} (${d.getAttribute('class') ?? ''})`];
     }),
@@ -94,7 +111,7 @@ test('un deck chargé se présente au clavier, de la première à la dernière d
 });
 
 for (const publicVise of ['dirigeant', 'technique'] as const) {
-  test(`aucune diapositive ne déborde de son cadre (public ${publicVise})`, async ({
+  test(`aucune diapositive ne déborde ni n’est trop juste (public ${publicVise})`, async ({
     page,
     request,
   }) => {
@@ -103,7 +120,7 @@ for (const publicVise of ['dirigeant', 'technique'] as const) {
     await expect(page.getByRole('heading', { name: /^Présenter/ })).toBeVisible();
     await page.emulateMedia({ media: 'print' });
 
-    expect(await diapositivesQuiDebordent(page)).toStrictEqual([]);
+    expect(await diapositivesTropPleines(page)).toStrictEqual([]);
   });
 }
 

@@ -485,6 +485,16 @@ kbd {
   list-style: none;
   padding: 0;
   display: grid;
+  gap: 0.6cqw;
+  font-size: 1.7cqw;
+}
+
+/* Sept processus sous le grand chiffre : un gabarit plus compact que les autres. */
+.diapositive-GainsAttendus .chiffre-cle {
+  font-size: 5.2cqw;
+}
+
+.diapositive-GainsAttendus .contenu-de-diapositive {
   gap: 1cqw;
 }
 
@@ -504,7 +514,7 @@ kbd {
 
 .barres .piste {
   position: relative;
-  height: 2cqw;
+  height: 1.5cqw;
   background: #f0f0ee;
   border-radius: 0.5cqw;
 }
