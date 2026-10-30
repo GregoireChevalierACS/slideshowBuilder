@@ -11,7 +11,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **4. Persistance, serveur** | SQLite, migrations, dépôts, contract tests Fake/SQLite, zod, Problem Details                                              | La suite de contrats passe sur les deux adapters, le smoke test du build passe                         | terminée |
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | terminée |
 | **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | terminée |
-| **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | à venir  |
+| **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | en cours |
 
 ## Phase 0 — notes
 
@@ -60,3 +60,9 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Critère « captures visuelles stables » remplacé par un contrôle E2E de débordement (diapositives et boîtes du schéma) sur un deck chargé, plus le comptage des pages du vrai PDF.
 - Le contrôle de débordement a trouvé la diapositive « Ce que nous avons observé » trop pleine (noms longs) ; des captures relues à l'œil ont trouvé le texte SVG du schéma qui sortait de ses boîtes, invisible pour le contrôle tant qu'il était en SVG, et des barres de gains écrasées par une mauvaise échelle.
 - Correctif de sécurité : `qs` 6.16.1.
+
+## Phase 7 — notes
+
+- Import et export JSON : voir [ADR 0011](docs/adr/0011-export-et-import-des-diagnostics.md). Historique complet, fichier validé en entier avant écriture, import idempotent qui complète un historique poursuivi ailleurs sans jamais écraser un historique divergent.
+- Piège : Windows ne distingue pas la casse des noms de fichier ; `ExportDeDiagnostics.ts` à côté de `exportDeDiagnostics.ts` écrase le second. Le type du fichier vit donc dans `FichierDExport.ts`.
+- Le test E2E de présentation comptait l'aperçu avant son affichage (`count()` n'attend pas) : échec intermittent sur machine chargée, corrigé.
