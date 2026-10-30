@@ -44,6 +44,11 @@ export interface VersionDejaEnregistree {
   readonly version: number;
 }
 
+export interface DiagnosticDejaPresent {
+  readonly kind: 'DiagnosticDejaPresent';
+  readonly id: IdDeDiagnostic;
+}
+
 /**
  * Historise chaque version d'un diagnostic, sans jamais en écraser une : une présentation déjà
  * envoyée doit pouvoir être régénérée à l'identique.
@@ -53,6 +58,16 @@ export interface DepotDeDiagnostics {
   enregistrer(id: IdDeDiagnostic, diagnostic: Diagnostic): Result<void, VersionDejaEnregistree>;
   derniereVersion(id: IdDeDiagnostic): Diagnostic | undefined;
   version(id: IdDeDiagnostic, numero: number): Diagnostic | undefined;
+  /** Toutes les versions, de la plus ancienne à la plus récente ; aucune pour un diagnostic inconnu. */
+  historique(id: IdDeDiagnostic): readonly Diagnostic[];
+  /**
+   * Enregistre d'un coup l'historique d'un diagnostic venu d'un autre poste (versions distinctes),
+   * ou rien : refusé si ce diagnostic existe déjà.
+   */
+  importer(
+    id: IdDeDiagnostic,
+    historique: readonly Diagnostic[],
+  ): Result<void, DiagnosticDejaPresent>;
   /** Les entretiens les plus récents d'abord, puis par prospect. */
   lister(): readonly ResumeDeDiagnostic[];
 }

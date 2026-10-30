@@ -1,6 +1,7 @@
 import { err, ok, type Diagnostic, type Result } from '@slideshow/domain';
 import type {
   DepotDeDiagnostics,
+  DiagnosticDejaPresent,
   IdDeDiagnostic,
   ResumeDeDiagnostic,
   VersionDejaEnregistree,
@@ -38,6 +39,24 @@ export class DepotEnMemoire implements DepotDeDiagnostics {
     const diagnostic = lireLaSaisie(structuredClone(saisie), numero);
     if (!diagnostic.ok) throw new Error(`stock corrompu : ${JSON.stringify(diagnostic.error)}`);
     return diagnostic.value;
+  }
+
+  historique(id: IdDeDiagnostic): readonly Diagnostic[] {
+    return [...(this.versions.get(id)?.keys() ?? [])]
+      .sort((a, b) => a - b)
+      .flatMap((numero) => this.version(id, numero) ?? []);
+  }
+
+  importer(
+    id: IdDeDiagnostic,
+    historique: readonly Diagnostic[],
+  ): Result<void, DiagnosticDejaPresent> {
+    if (this.versions.has(id)) return err({ kind: 'DiagnosticDejaPresent', id });
+    this.versions.set(
+      id,
+      new Map(historique.map((d) => [d.version, structuredClone(decrireLeDiagnostic(d))])),
+    );
+    return ok(undefined);
   }
 
   lister(): readonly ResumeDeDiagnostic[] {

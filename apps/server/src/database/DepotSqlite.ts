@@ -4,6 +4,7 @@ import {
   lireUnIdDeDiagnostic,
   schemaDeSaisieDeDiagnostic,
   type DepotDeDiagnostics,
+  type DiagnosticDejaPresent,
   type IdDeDiagnostic,
   type ResumeDeDiagnostic,
   type VersionDejaEnregistree,
@@ -47,6 +48,38 @@ export class DepotSqlite implements DepotDeDiagnostics {
       .prepare('SELECT version, saisie FROM diagnostic_versions WHERE id = ? AND version = ?')
       .get(id, numero);
     return ligne === undefined ? undefined : this.relire(id, ligneDeVersion.parse(ligne));
+  }
+
+  historique(id: IdDeDiagnostic): readonly Diagnostic[] {
+    return this.db
+      .prepare('SELECT version, saisie FROM diagnostic_versions WHERE id = ? ORDER BY version')
+      .all(id)
+      .map((ligne) => this.relire(id, ligneDeVersion.parse(ligne)));
+  }
+
+  importer(
+    id: IdDeDiagnostic,
+    historique: readonly Diagnostic[],
+  ): Result<void, DiagnosticDejaPresent> {
+    // Une transaction : un import interrompu ne laisse jamais un historique à moitié écrit.
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      if (this.db.prepare('SELECT 1 FROM diagnostic_versions WHERE id = ?').get(id) !== undefined) {
+        this.db.exec('ROLLBACK');
+        return err({ kind: 'DiagnosticDejaPresent', id });
+      }
+      const inserer = this.db.prepare(
+        'INSERT INTO diagnostic_versions (id, version, saisie) VALUES (?, ?, ?)',
+      );
+      for (const diagnostic of historique) {
+        inserer.run(id, diagnostic.version, JSON.stringify(decrireLeDiagnostic(diagnostic)));
+      }
+      this.db.exec('COMMIT');
+      return ok(undefined);
+    } catch (erreur) {
+      this.db.exec('ROLLBACK');
+      throw erreur;
+    }
   }
 
   lister(): readonly ResumeDeDiagnostic[] {

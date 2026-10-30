@@ -136,5 +136,42 @@ export const verifierLeContratDuDepotDeDiagnostics = (
     it('ne liste rien quand il est vide', () => {
       expect(fabriquerUnDepotVide().lister()).toStrictEqual([]);
     });
+
+    it('rend l’historique complet, de la plus ancienne version à la plus récente', () => {
+      const depot = fabriquerUnDepotVide();
+      depot.enregistrer(id('a'), diagnostic(2, { prospect: { nom: 'Deux' } }));
+      depot.enregistrer(id('a'), diagnostic(1, { prospect: { nom: 'Un' } }));
+      depot.enregistrer(id('b'), diagnostic(1, { prospect: { nom: 'Autre' } }));
+
+      expect(depot.historique(id('a')).map((d) => [d.version, d.prospect.nom])).toStrictEqual([
+        [1, 'Un'],
+        [2, 'Deux'],
+      ]);
+      expect(depot.historique(id('inconnu'))).toStrictEqual([]);
+    });
+
+    it('importe un historique complet, relu à l’identique', () => {
+      const depot = fabriquerUnDepotVide();
+      const historique = [
+        diagnostic(1, { prospect: { nom: 'Un' } }),
+        diagnostic(2, { processus: [uneSaisieDeProcessus()] }),
+      ];
+
+      expect(depot.importer(id('a'), historique)).toStrictEqual({ ok: true, value: undefined });
+      expect(depot.historique(id('a')).map(decrireLeDiagnostic)).toStrictEqual(
+        historique.map(decrireLeDiagnostic),
+      );
+      expect(depot.lister().map((r) => r.derniereVersion)).toStrictEqual([2]);
+    });
+
+    it('refuse d’importer un diagnostic déjà présent, sans rien y changer', () => {
+      const depot = fabriquerUnDepotVide();
+      depot.enregistrer(id('a'), diagnostic(1, { prospect: { nom: 'Original' } }));
+
+      expect(
+        depot.importer(id('a'), [diagnostic(2, { prospect: { nom: 'Importé' } })]),
+      ).toStrictEqual({ ok: false, error: { kind: 'DiagnosticDejaPresent', id: 'a' } });
+      expect(depot.historique(id('a')).map((d) => d.prospect.nom)).toStrictEqual(['Original']);
+    });
   });
 };

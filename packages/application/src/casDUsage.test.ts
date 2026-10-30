@@ -255,4 +255,160 @@ describe('cas d’usage', () => {
       },
     ]);
   });
+
+  describe('exporter et importer', () => {
+    /** Un poste où l'on a ouvert un diagnostic puis révisé `revisions` fois. */
+    const unPosteAvec = (revisions: number, depot = new DepotEnMemoire()) => {
+      const poste = creerLesCasDUsage({
+        depot,
+        horloge: new HorlogeFixe('2026-10-30'),
+        identifiants: new IdentifiantsSequentiels(),
+      });
+      let { diagnostic } = valeur(poste.ouvrirUnDiagnostic({ nom: 'Négoce Durand' }));
+      for (let i = 0; i < revisions; i += 1) {
+        diagnostic = valeur(
+          poste.reviserUnDiagnostic(id('diagnostic-1'), diagnostic.version, {
+            ...modifications(diagnostic),
+            processus: [uneSaisieDeProcessus({ personnes: i + 1 })],
+          }),
+        );
+      }
+      return { depot, ...poste };
+    };
+
+    const exportDe = (revisions: number) =>
+      valeur(unPosteAvec(revisions).exporterUnDiagnostic(id('diagnostic-1')));
+
+    it('exporte l’historique complet d’un diagnostic, daté du jour', () => {
+      const exporte = exportDe(2);
+
+      expect(exporte).toMatchObject({ exporteLe: '2026-10-30', versionDuFormat: 1 });
+      expect(exporte.diagnostics.map((d) => d.versions.map((v) => v.version))).toStrictEqual([
+        [1, 2, 3],
+      ]);
+    });
+
+    it('signale l’export d’un diagnostic inconnu', () => {
+      expect(preparer().exporterUnDiagnostic(id('inconnu'))).toStrictEqual({
+        ok: false,
+        error: { kind: 'DiagnosticIntrouvable', id: 'inconnu' },
+      });
+    });
+
+    it('exporte tous les diagnostics, dans l’ordre de la liste', () => {
+      const { ouvrirUnDiagnostic, exporterLesDiagnostics } = preparer();
+      ouvrirUnDiagnostic({ nom: 'Bravo' });
+      ouvrirUnDiagnostic({ nom: 'Alpha' });
+
+      expect(
+        exporterLesDiagnostics().diagnostics.map((d) =>
+          d.versions.map((v) => v.saisie.prospect.nom),
+        ),
+      ).toStrictEqual([['Alpha'], ['Bravo']]);
+    });
+
+    it('importe sur un autre poste un historique relu à l’identique', () => {
+      const exporte = exportDe(2);
+      const autre = preparer();
+
+      expect(valeur(autre.importerDesDiagnostics(exporte))).toStrictEqual([
+        { id: 'diagnostic-1', prospect: 'Négoce Durand', statut: 'importe', versionsAjoutees: 3 },
+      ]);
+      expect(valeur(autre.exporterUnDiagnostic(id('diagnostic-1'))).diagnostics).toStrictEqual(
+        exporte.diagnostics,
+      );
+    });
+
+    it('ne change rien quand le poste a déjà ces versions, ou plus récentes', () => {
+      const poste = unPosteAvec(2);
+
+      for (const exporte of [exportDe(2), exportDe(1)]) {
+        expect(valeur(poste.importerDesDiagnostics(exporte))).toMatchObject([
+          { statut: 'aJour', versionsAjoutees: 0 },
+        ]);
+      }
+      expect(poste.depot.historique(id('diagnostic-1'))).toHaveLength(3);
+    });
+
+    it('complète un historique qui a continué sur l’autre poste', () => {
+      const poste = unPosteAvec(1);
+
+      expect(valeur(poste.importerDesDiagnostics(exportDe(3)))).toMatchObject([
+        { statut: 'complete', versionsAjoutees: 2 },
+      ]);
+      expect(valeur(poste.exporterUnDiagnostic(id('diagnostic-1'))).diagnostics).toStrictEqual(
+        exportDe(3).diagnostics,
+      );
+    });
+
+    it('n’écrase jamais un historique qui a divergé', () => {
+      const poste = unPosteAvec(1);
+      const divergent = poste.reviserUnDiagnostic(id('diagnostic-1'), 2, {
+        prospect: { nom: 'Travail local' },
+        hypotheses: { joursTravaillesParAn: 228, heuresAnnuellesTempsPlein: 1_607 },
+        processus: [],
+      });
+      valeur(divergent);
+
+      expect(valeur(poste.importerDesDiagnostics(exportDe(3)))).toMatchObject([
+        { statut: 'divergent', versionsAjoutees: 0 },
+      ]);
+      expect(poste.depot.derniereVersion(id('diagnostic-1'))?.prospect.nom).toBe('Travail local');
+    });
+
+    it('refuse un fichier invalide sans rien écrire', () => {
+      const { importerDesDiagnostics, listerLesDiagnostics } = preparer();
+      const exporte = exportDe(0);
+
+      expect(
+        importerDesDiagnostics({
+          ...exporte,
+          diagnostics: [...exporte.diagnostics, { id: 'pas valide', versions: [] }],
+        }),
+      ).toMatchObject({ ok: false });
+      expect(importerDesDiagnostics({ nom: 'x' })).toStrictEqual({
+        ok: false,
+        error: { kind: 'PasUnExport' },
+      });
+      expect(listerLesDiagnostics()).toStrictEqual([]);
+    });
+
+    it('traite comme divergent un diagnostic créé pendant l’import', () => {
+      class DepotDejaRempli extends DepotEnMemoire {
+        override importer(identifiant: IdDeDiagnostic) {
+          return { ok: false, error: { kind: 'DiagnosticDejaPresent', id: identifiant } } as const;
+        }
+      }
+      const { importerDesDiagnostics } = unPosteAvec(0, new DepotDejaRempli());
+
+      expect(
+        valeur(
+          importerDesDiagnostics({
+            ...exportDe(0),
+            diagnostics: [{ ...exportDe(0).diagnostics[0], id: 'autre' }],
+          }),
+        ),
+      ).toMatchObject([{ id: 'autre', statut: 'divergent', versionsAjoutees: 0 }]);
+    });
+
+    it('s’arrête quand une révision locale s’intercale, en gardant les versions ajoutées', () => {
+      class DepotRevisePendantLImport extends DepotEnMemoire {
+        override enregistrer(identifiant: IdDeDiagnostic, diagnostic: Diagnostic) {
+          if (diagnostic.version === 3) {
+            return {
+              ok: false,
+              error: { kind: 'VersionDejaEnregistree', id: identifiant, version: 3 },
+            } as const;
+          }
+          return super.enregistrer(identifiant, diagnostic);
+        }
+      }
+      const poste = unPosteAvec(0, new DepotRevisePendantLImport());
+
+      expect(valeur(poste.importerDesDiagnostics(exportDe(3)))).toMatchObject([
+        { statut: 'divergent', versionsAjoutees: 1 },
+      ]);
+      expect(poste.depot.historique(id('diagnostic-1'))).toHaveLength(2);
+    });
+  });
 });

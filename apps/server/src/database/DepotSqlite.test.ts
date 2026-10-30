@@ -1,4 +1,4 @@
-import { lireUnIdDeDiagnostic } from '@slideshow/application';
+import { lireLaSaisie, lireUnIdDeDiagnostic } from '@slideshow/application';
 import {
   uneSaisieDeDiagnostic,
   verifierLeContratDuDepotDeDiagnostics,
@@ -15,6 +15,19 @@ const uneBaseMigree = () => {
 };
 
 verifierLeContratDuDepotDeDiagnostics('SQLite', () => new DepotSqlite(uneBaseMigree()));
+
+describe('DepotSqlite à l’import', () => {
+  it('n’écrit rien quand une écriture échoue en cours d’import', () => {
+    const depot = new DepotSqlite(uneBaseMigree());
+    const id = lireUnIdDeDiagnostic('a');
+    const v1 = lireLaSaisie(uneSaisieDeDiagnostic(), 1);
+    if (!id.ok || !v1.ok) throw new Error('données de test invalides');
+
+    // Deux fois la version 1 : la clé primaire refuse la seconde écriture.
+    expect(() => depot.importer(id.value, [v1.value, v1.value])).toThrow(/UNIQUE/);
+    expect(depot.historique(id.value)).toStrictEqual([]);
+  });
+});
 
 describe('DepotSqlite face à un stock corrompu', () => {
   const id = () => {

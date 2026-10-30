@@ -6,12 +6,19 @@ export {
   type Dependances,
   type DiagnosticIntrouvable,
   type ModificationsDuDiagnostic,
+  type ResultatDImport,
   type VersionIntrouvable,
   type VersionPerimee,
 } from './casDUsage.js';
 export {
+  nomDuFichierDExport,
+  type ExportDeDiagnostics,
+  type ExportIllisible,
+} from './echange/exportDeDiagnostics.js';
+export {
   lireUnIdDeDiagnostic,
   type DepotDeDiagnostics,
+  type DiagnosticDejaPresent,
   type GenerateurDIdentifiants,
   type Horloge,
   type IdDeDiagnostic,
@@ -30,6 +37,9 @@ export {
   type SuggestionDeTaux,
 } from './modeles/modelesDeProcessus.js';
 export {
+  FORMAT_D_EXPORT,
+  schemaDExport,
+  schemaDuCompteRenduDImport,
   schemaDeDiagnosticPublie,
   schemaDeProspect,
   schemaDeResumeDeDiagnostic,

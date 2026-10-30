@@ -8,6 +8,13 @@ import {
   type ParametresDuDeck,
   type Result,
 } from '@slideshow/domain';
+import {
+  decrireUnExport,
+  lireUnExport,
+  type ExportDeDiagnostics,
+  type ExportIllisible,
+  type HistoriqueDeDiagnostic,
+} from './echange/exportDeDiagnostics.js';
 import type {
   DepotDeDiagnostics,
   GenerateurDIdentifiants,
@@ -15,6 +22,7 @@ import type {
   IdDeDiagnostic,
   ResumeDeDiagnostic,
 } from './ports.js';
+import { decrireLeDiagnostic } from './saisie/decrireLeDiagnostic.js';
 import { lireLaSaisie, type SaisieInvalide } from './saisie/lireLaSaisie.js';
 import type { SaisieDeDiagnostic } from './saisie/SaisieDeDiagnostic.js';
 
@@ -49,6 +57,54 @@ export type ModificationsDuDiagnostic = Omit<SaisieDeDiagnostic, 'dateDEntretien
 const hypothesesParDefaut = (): SaisieDeDiagnostic['hypotheses'] => {
   const { joursTravaillesParAn, heuresAnnuellesTempsPlein } = HypothesesDeCalcul.parDefaut();
   return { joursTravaillesParAn, heuresAnnuellesTempsPlein };
+};
+
+export interface ResultatDImport {
+  readonly id: IdDeDiagnostic;
+  /** Le prospect de la dernière version du fichier. */
+  readonly prospect: string;
+  /**
+   * `importe` : nouveau sur ce poste. `complete` : les versions suivantes ont été ajoutées.
+   * `aJour` : rien de nouveau. `divergent` : les deux historiques diffèrent, rien n'est importé.
+   */
+  readonly statut: 'importe' | 'complete' | 'aJour' | 'divergent';
+  readonly versionsAjoutees: number;
+}
+
+const importer = (
+  depot: DepotDeDiagnostics,
+  { id, historique }: HistoriqueDeDiagnostic,
+): ResultatDImport => {
+  // La dernière version donne le nom actuel du prospect.
+  const prospect = historique.reduce((_, d) => d.prospect.nom, '');
+  const resultat = (statut: ResultatDImport['statut'], versionsAjoutees: number) => ({
+    id,
+    prospect,
+    statut,
+    versionsAjoutees,
+  });
+
+  const local = depot.historique(id);
+  if (local.length === 0) {
+    // Créé entre-temps par une autre requête : traité comme un historique différent.
+    return depot.importer(id, historique).ok
+      ? resultat('importe', historique.length)
+      : resultat('divergent', 0);
+  }
+
+  // Les versions communes aux deux historiques doivent être identiques, saisie comprise.
+  const debut = (versions: readonly Diagnostic[]) =>
+    versions
+      .slice(0, Math.min(local.length, historique.length))
+      .map((d) => JSON.stringify(decrireLeDiagnostic(d)))
+      .join('\n');
+  if (debut(local) !== debut(historique)) return resultat('divergent', 0);
+
+  const suivantes = historique.slice(local.length);
+  if (suivantes.length === 0) return resultat('aJour', 0);
+  const ajoutees = suivantes.findIndex((d) => !depot.enregistrer(id, d).ok);
+  // Une révision locale s'est intercalée : les versions déjà ajoutées restent valides.
+  return ajoutees === -1 ? resultat('complete', suivantes.length) : resultat('divergent', ajoutees);
 };
 
 /** Composition des cas d'usage : les dépendances sont injectées, jamais importées. */
@@ -127,6 +183,33 @@ export const creerLesCasDUsage = ({ depot, horloge, identifiants }: Dependances)
     },
 
     listerLesDiagnostics: (): readonly ResumeDeDiagnostic[] => depot.lister(),
+
+    /** L'historique complet d'un diagnostic, prêt à être enregistré dans un fichier. */
+    exporterUnDiagnostic: (
+      id: IdDeDiagnostic,
+    ): Result<ExportDeDiagnostics, DiagnosticIntrouvable> => {
+      const historique = depot.historique(id);
+      if (historique.length === 0) return err({ kind: 'DiagnosticIntrouvable', id });
+      return ok(decrireUnExport(horloge.aujourdhui(), [{ id, historique }]));
+    },
+
+    /** Tous les diagnostics, dans l'ordre de la liste : une sauvegarde complète du poste. */
+    exporterLesDiagnostics: (): ExportDeDiagnostics =>
+      decrireUnExport(
+        horloge.aujourdhui(),
+        depot.lister().map(({ id }) => ({ id, historique: depot.historique(id) })),
+      ),
+
+    /**
+     * Importe un fichier d'export, validé en entier avant la moindre écriture. Un diagnostic déjà
+     * présent n'est jamais écrasé : il est complété si son historique local est le début de celui du
+     * fichier (le travail a continué sur l'autre poste), laissé tel quel sinon.
+     */
+    importerDesDiagnostics: (brut: unknown): Result<ResultatDImport[], ExportIllisible> => {
+      const lu = lireUnExport(brut);
+      if (!lu.ok) return lu;
+      return ok(lu.value.map((importe) => importer(depot, importe)));
+    },
   };
 };
 
