@@ -99,6 +99,8 @@ test('un deck chargé se présente au clavier, de la première à la dernière d
   const id = await preparerUnDiagnosticCharge(request);
   await page.goto(`/#/diagnostics/${id}/presentation?public=technique&duree=complete`);
   const apercu = page.getByRole('list', { name: 'Aperçu des diapositives' }).getByRole('button');
+  // count() n'attend pas : sans cette attente, une machine chargée compte un aperçu encore vide.
+  await expect(apercu.first()).toBeVisible();
   const nombre = await apercu.count();
   expect(nombre).toBeGreaterThan(15);
 

@@ -23,6 +23,7 @@ const unClient = (surcharges: Partial<ClientDeLApi> = {}): ClientDeLApi => ({
     }),
   ),
   consulterUnDiagnostic: vi.fn(),
+  importerDesDiagnostics: vi.fn(),
   reviserUnDiagnostic: vi.fn(),
   ...surcharges,
 });
@@ -37,6 +38,22 @@ const afficher = (client: ClientDeLApi, ouvrir = vi.fn()) => {
 };
 
 describe('Accueil', () => {
+  it('recharge la liste après un import', async () => {
+    const client = unClient({
+      importerDesDiagnostics: vi.fn(() => Promise.resolve({ ok: true as const, value: [] })),
+    });
+    afficher(client);
+    await screen.findByRole('link', { name: /Négoce Durand/ });
+
+    await userEvent.upload(
+      screen.getByLabelText('Importer un export…'),
+      new File(['{}'], 'diagnostics.json', { type: 'application/json' }),
+    );
+
+    await screen.findByRole('status');
+    expect(client.listerLesDiagnostics).toHaveBeenCalledTimes(2);
+  });
+
   it('liste les diagnostics, avec un lien vers chacun', async () => {
     afficher(unClient());
 

@@ -1,5 +1,6 @@
 import type {
   DiagnosticIntrouvable,
+  ExportIllisible,
   SaisieInvalide,
   VersionIntrouvable,
   VersionPerimee,
@@ -65,6 +66,34 @@ export const versionPerimee = ({ versionAttendue, versionActuelle }: VersionPeri
   status: 409,
   detail: `La version ${String(versionAttendue)} n’est plus la dernière : recharger la version ${String(versionActuelle)} avant de réviser.`,
   versionActuelle,
+});
+
+const detailDeLExport = (erreur: ExportIllisible): string => {
+  switch (erreur.kind) {
+    case 'PasUnExport':
+      return 'Ce fichier n’est pas un export de diagnostics.';
+    case 'FormatTropRecent':
+      return `Ce fichier vient d’une version plus récente de l’application (format ${String(erreur.versionDuFormat)}) : mettez-la à jour avant d’importer.`;
+    case 'StructureDExportInvalide':
+      return `Ce fichier a été modifié ou tronqué (${erreur.erreurs.map((e) => e.chemin).join(', ')}).`;
+    case 'IdentifiantInvalide':
+      return `L’identifiant « ${erreur.valeur} » est invalide.`;
+    case 'DiagnosticEnDouble':
+      return `Le diagnostic « ${erreur.id} » figure deux fois dans le fichier.`;
+    case 'HistoriqueIncomplet':
+      return `Il manque la version ${String(erreur.versionAttendue)} du diagnostic « ${erreur.id} ».`;
+    case 'SaisieInvalide':
+      return `Le champ « ${erreur.champ} » est refusé : ${erreur.erreur.kind}.`;
+  }
+};
+
+/** Le fichier entier est refusé : rien n'a été importé. */
+export const exportIllisible = (erreur: ExportIllisible): Probleme => ({
+  type: '/problemes/export-illisible',
+  title: 'Export illisible',
+  status: 422,
+  detail: `${detailDeLExport(erreur)} Rien n’a été importé.`,
+  erreur,
 });
 
 export const hoteRefuse = (): Probleme => ({

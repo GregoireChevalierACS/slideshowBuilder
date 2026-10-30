@@ -1,6 +1,7 @@
 import {
   schemaDeDiagnosticPublie,
   schemaDeResumeDeDiagnostic,
+  schemaDuCompteRenduDImport,
   type ModificationsDuDiagnostic,
   type SaisieDeDiagnostic,
 } from '@slideshow/application';
@@ -18,6 +19,7 @@ const schemaDeProbleme = z.looseObject({
 
 export type Probleme = z.infer<typeof schemaDeProbleme>;
 export type ResumeDeDiagnostic = z.infer<typeof schemaDeResumeDeDiagnostic>;
+export type CompteRenduDImport = z.infer<typeof schemaDuCompteRenduDImport>;
 export interface DiagnosticPublie {
   readonly id: string;
   readonly version: number;
@@ -95,7 +97,21 @@ export const creerLeClientDeLApi = (appel: Appel = (url, options) => fetch(url, 
         urlDuDiagnostic(id),
         enJson('PUT', { versionAttendue, ...modifications }),
       ),
+
+    /** Le contenu d'un fichier d'export, transmis tel quel : le serveur le valide en entier. */
+    importerDesDiagnostics: (
+      contenuDuFichier: string,
+    ): Promise<Result<CompteRenduDImport, ErreurDApi>> =>
+      demander(schemaDuCompteRenduDImport, '/api/import', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: contenuDuFichier,
+      }),
   };
 };
+
+/** Téléchargés par un simple lien : le serveur nomme le fichier. */
+export const urlDeLExport = (id?: string): string =>
+  id === undefined ? '/api/export' : `/api/diagnostics/${encodeURIComponent(id)}/export`;
 
 export type ClientDeLApi = ReturnType<typeof creerLeClientDeLApi>;

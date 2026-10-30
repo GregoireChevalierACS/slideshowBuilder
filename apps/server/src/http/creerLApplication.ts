@@ -1,11 +1,13 @@
 import {
   decrireLeDiagnostic,
   lireUnIdDeDiagnostic,
+  nomDuFichierDExport,
   schemaDeProspect,
   schemaDeRevision,
   schemaDesParametresDuDeck,
   schemaDeVersion,
   type CasDUsage,
+  type ExportDeDiagnostics,
   type IdDeDiagnostic,
 } from '@slideshow/application';
 import type { Diagnostic } from '@slideshow/domain';
@@ -17,6 +19,7 @@ import {
   diagnosticIntrouvable,
   envoyer,
   erreurInterne,
+  exportIllisible,
   hoteRefuse,
   requeteInvalide,
   routeInconnue,
@@ -138,6 +141,32 @@ export const creerLApplication = (
       if (!deck.ok) return envoyer(reponse, diagnosticIntrouvable(deck.error));
       return reponse.send({ id, diapositives: deck.value });
     });
+  });
+
+  /** Le navigateur enregistre la réponse dans un fichier au lieu de l'afficher. */
+  const enFichier = (reponse: FastifyReply, nom: string, contenu: ExportDeDiagnostics) =>
+    reponse.header('content-disposition', `attachment; filename="${nom}"`).send(contenu);
+
+  app.get('/api/export', (_requete, reponse) => {
+    const exporte = casDUsage.exporterLesDiagnostics();
+    return enFichier(reponse, nomDuFichierDExport(exporte, 'tous'), exporte);
+  });
+
+  app.get('/api/diagnostics/:id/export', (requete, reponse) =>
+    avecUnId(requete.params, reponse, (id) => {
+      const exporte = casDUsage.exporterUnDiagnostic(id);
+      if (!exporte.ok) return envoyer(reponse, diagnosticIntrouvable(exporte.error));
+      return enFichier(reponse, nomDuFichierDExport(exporte.value, 'un-diagnostic'), exporte.value);
+    }),
+  );
+
+  // Une sauvegarde complète garde chaque version enregistrée : elle dépasse vite la limite par
+  // défaut de 1 Mio.
+  app.post('/api/import', { bodyLimit: 64 * 1024 * 1024 }, (requete, reponse) => {
+    const importe = casDUsage.importerDesDiagnostics(requete.body);
+    return importe.ok
+      ? reponse.send(importe.value)
+      : envoyer(reponse, exportIllisible(importe.error));
   });
 
   return app;

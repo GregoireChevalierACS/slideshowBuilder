@@ -2,11 +2,14 @@ import {
   creerLesCasDUsage,
   schemaDeDiagnosticPublie,
   schemaDeResumeDeDiagnostic,
+  schemaDExport,
+  schemaDuCompteRenduDImport,
   type CasDUsage,
 } from '@slideshow/application';
 import {
   HorlogeFixe,
   IdentifiantsSequentiels,
+  uneSaisieDeDiagnostic,
   uneSaisieDeProcessus,
 } from '@slideshow/application/testing';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -17,6 +20,13 @@ import { z } from 'zod';
 import { DepotSqlite } from '../database/DepotSqlite.js';
 import { uneBaseEnMemoire } from '../database/testing/uneBaseEnMemoire.js';
 import { creerLApplication } from './creerLApplication.js';
+
+const unExportVide = () => ({
+  format: 'slideshow-builder/diagnostics',
+  versionDuFormat: 1,
+  exporteLe: '2026-10-27',
+  diagnostics: [],
+});
 
 const PROBLEME = 'application/problem+json; charset=utf-8';
 
@@ -402,6 +412,10 @@ describe('API HTTP', () => {
           },
           derniereVersion: () => undefined,
           version: () => undefined,
+          historique: () => [],
+          importer: () => {
+            throw new Error('mot de passe en clair');
+          },
           lister: () => {
             throw new Error('mot de passe en clair');
           },
@@ -423,6 +437,159 @@ describe('API HTTP', () => {
       });
       expect(reponse.body).not.toContain('mot de passe');
     });
+  });
+});
+
+describe('export et import', () => {
+  const exporter = async (app: ReturnType<typeof uneApplication>, url: string) => {
+    const reponse = await app.inject({ method: 'GET', url });
+    return { reponse, contenu: schemaDExport.parse(corps(reponse)) };
+  };
+
+  const importer = (app: ReturnType<typeof uneApplication>, payload: string | object) =>
+    app.inject({
+      method: 'POST',
+      url: '/api/import',
+      headers: { 'content-type': 'application/json' },
+      payload,
+    });
+
+  it('exporte un diagnostic en fichier nommé d’après le prospect', async () => {
+    const app = uneApplication();
+    await ouvrir(app);
+
+    const { reponse, contenu } = await exporter(app, '/api/diagnostics/diagnostic-1/export');
+
+    expect(reponse.statusCode).toBe(200);
+    expect(reponse.headers['content-disposition']).toBe(
+      'attachment; filename="diagnostic-negoce-durand-2026-10-27.json"',
+    );
+    expect(contenu.diagnostics.map((d) => d.id)).toStrictEqual(['diagnostic-1']);
+  });
+
+  it('exporte tous les diagnostics du poste', async () => {
+    const app = uneApplication();
+    await ouvrir(app, 'Alpha');
+    await ouvrir(app, 'Bravo');
+
+    const { reponse, contenu } = await exporter(app, '/api/export');
+
+    expect(reponse.headers['content-disposition']).toBe(
+      'attachment; filename="diagnostics-2026-10-27.json"',
+    );
+    expect(contenu.diagnostics).toHaveLength(2);
+  });
+
+  it('refuse l’export d’un diagnostic inconnu : 404', async () => {
+    const reponse = await uneApplication().inject({
+      method: 'GET',
+      url: '/api/diagnostics/inconnu/export',
+    });
+
+    expect(reponse.statusCode).toBe(404);
+    expect(corps(reponse)).toMatchObject({ type: '/problemes/diagnostic-introuvable' });
+  });
+
+  it('importe sur un autre poste ce qu’un poste a exporté, avec un compte rendu', async () => {
+    const source = uneApplication();
+    await ouvrir(source);
+    const { contenu } = await exporter(source, '/api/export');
+    const cible = uneApplication();
+
+    const reponse = await importer(cible, contenu);
+    const deNouveau = await importer(cible, contenu);
+
+    expect(reponse.statusCode).toBe(200);
+    expect(schemaDuCompteRenduDImport.parse(corps(reponse))).toStrictEqual([
+      { id: 'diagnostic-1', prospect: 'Négoce Durand', statut: 'importe', versionsAjoutees: 1 },
+    ]);
+    expect(corps(deNouveau)).toMatchObject([{ statut: 'aJour' }]);
+    expect(
+      corps(await cible.inject({ method: 'GET', url: '/api/diagnostics/diagnostic-1' })),
+    ).toMatchObject({ saisie: { prospect: { nom: 'Négoce Durand' } } });
+  });
+
+  it('accepte une sauvegarde de plus de 1 Mio', async () => {
+    const versions = Array.from({ length: 600 }, (_, i) => ({
+      version: i + 1,
+      saisie: uneSaisieDeDiagnostic({
+        processus: Array.from({ length: 5 }, (_, j) =>
+          uneSaisieDeProcessus({ nom: `P${String(j)}` }),
+        ),
+      }),
+    }));
+    const contenu = JSON.stringify({ ...unExportVide(), diagnostics: [{ id: 'a', versions }] });
+
+    expect(contenu.length).toBeGreaterThan(1024 * 1024);
+    expect((await importer(uneApplication(), contenu)).statusCode).toBe(200);
+  });
+
+  it('refuse un fichier qui n’est pas du JSON : 400', async () => {
+    expect((await importer(uneApplication(), '{ pas du json')).statusCode).toBe(400);
+  });
+
+  it.each([
+    ['un autre JSON', { nom: 'x' }, 'n’est pas un export'],
+    ['un format plus récent', { ...unExportVide(), versionDuFormat: 2 }, 'version plus récente'],
+    [
+      'une structure modifiée',
+      { ...unExportVide(), diagnostics: [{ id: 'a' }] },
+      'diagnostics.0.versions',
+    ],
+    [
+      'un identifiant invalide',
+      {
+        ...unExportVide(),
+        diagnostics: [{ id: 'é', versions: [{ version: 1, saisie: uneSaisieDeDiagnostic() }] }],
+      },
+      'identifiant « é »',
+    ],
+    [
+      'un diagnostic en double',
+      {
+        ...unExportVide(),
+        diagnostics: [1, 2].map(() => ({
+          id: 'a',
+          versions: [{ version: 1, saisie: uneSaisieDeDiagnostic() }],
+        })),
+      },
+      'figure deux fois',
+    ],
+    [
+      'une version manquante',
+      {
+        ...unExportVide(),
+        diagnostics: [{ id: 'a', versions: [{ version: 2, saisie: uneSaisieDeDiagnostic() }] }],
+      },
+      'Il manque la version 1',
+    ],
+    [
+      'une valeur refusée par le domaine',
+      {
+        ...unExportVide(),
+        diagnostics: [
+          {
+            id: 'a',
+            versions: [
+              { version: 1, saisie: uneSaisieDeDiagnostic({ dateDEntretien: '2026-02-30' }) },
+            ],
+          },
+        ],
+      },
+      'diagnostics[0].versions[0].saisie.dateDEntretien',
+    ],
+  ])('refuse le fichier entier pour %s : 422, sans rien importer', async (_, fichier, detail) => {
+    const app = uneApplication();
+
+    const reponse = await importer(app, fichier);
+
+    expect(reponse.statusCode).toBe(422);
+    expect(reponse.headers['content-type']).toBe(PROBLEME);
+    const probleme = z.object({ type: z.string(), detail: z.string() }).parse(corps(reponse));
+    expect(probleme.type).toBe('/problemes/export-illisible');
+    expect(probleme.detail).toContain(detail);
+    expect(probleme.detail).toContain('Rien n’a été importé.');
+    expect(corps(await app.inject({ method: 'GET', url: '/api/diagnostics' }))).toStrictEqual([]);
   });
 });
 

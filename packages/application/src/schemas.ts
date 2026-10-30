@@ -1,3 +1,4 @@
+import type { ExportDeDiagnostics } from './echange/FichierDExport.js';
 import type { SaisieDeDiagnostic } from './saisie/SaisieDeDiagnostic.js';
 import type {
   CategorieDOutil,
@@ -121,6 +122,28 @@ export const schemaDeVersion = z.strictObject({
   version: z.coerce.number().int().exactOptional(),
 });
 
+/** Reconnaît un fichier exporté par cette application, quelle que soit la version de son format. */
+export const FORMAT_D_EXPORT = 'slideshow-builder/diagnostics';
+export const VERSION_DU_FORMAT_D_EXPORT = 1;
+
+/** Un fichier d'export : l'historique complet de chaque diagnostic, version par version. */
+export const schemaDExport = z.strictObject({
+  format: z.literal(FORMAT_D_EXPORT),
+  versionDuFormat: z.literal(VERSION_DU_FORMAT_D_EXPORT),
+  exporteLe: z.string(),
+  diagnostics: z
+    .array(
+      z.strictObject({
+        id: z.string(),
+        versions: z
+          .array(z.strictObject({ version: entier, saisie: schemaDeSaisieDeDiagnostic }))
+          .min(1)
+          .max(10_000),
+      }),
+    )
+    .max(1_000),
+}) satisfies z.ZodType<ExportDeDiagnostics>;
+
 // Réponses de l'API : le client les valide à la réception, les tests du serveur vérifient que
 // chaque réponse réelle les respecte.
 
@@ -136,3 +159,12 @@ export const schemaDeDiagnosticPublie = z.strictObject({
   version: entier,
   saisie: schemaDeSaisieDeDiagnostic,
 });
+
+export const schemaDuCompteRenduDImport = z.array(
+  z.strictObject({
+    id: z.string(),
+    prospect: z.string(),
+    statut: z.enum(['importe', 'complete', 'aJour', 'divergent']),
+    versionsAjoutees: entier,
+  }),
+);

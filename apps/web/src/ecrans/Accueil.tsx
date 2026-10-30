@@ -6,6 +6,7 @@ import { messageDErreur } from '../api/messageDErreur.js';
 import { lienVers } from '../navigation.js';
 import { useRaccourci, useRaccourcis } from '../raccourcis/ContexteDesRaccourcis.js';
 import { libelle } from '../raccourcis/raccourcis.js';
+import { Sauvegarde } from '../sauvegarde/Sauvegarde.js';
 
 type EtatDeLaListe =
   | { readonly etat: 'chargement' }
@@ -100,6 +101,8 @@ export const Accueil = ({
 }) => {
   const [liste, setListe] = useState<EtatDeLaListe>({ etat: 'chargement' });
   const [enCreation, setEnCreation] = useState(false);
+  // Incrémenté après un import : la liste est rechargée.
+  const [chargements, setChargements] = useState(0);
   const { raccourcis } = useRaccourcis();
   useRaccourci('nouveauDiagnostic', () => {
     setEnCreation(true);
@@ -113,7 +116,7 @@ export const Accueil = ({
           : { etat: 'erreur', message: messageDErreur(resultat.error) },
       );
     });
-  }, [client]);
+  }, [client, chargements]);
 
   return (
     <main className="accueil">
@@ -136,6 +139,13 @@ export const Accueil = ({
           Nouveau diagnostic <kbd>{libelle(raccourcis.nouveauDiagnostic)}</kbd>
         </button>
       )}
+
+      <Sauvegarde
+        client={client}
+        apresImport={() => {
+          setChargements((n) => n + 1);
+        }}
+      />
 
       {liste.etat === 'erreur' && <p role="alert">{liste.message}</p>}
       {liste.etat === 'chargee' && liste.diagnostics.length === 0 && (

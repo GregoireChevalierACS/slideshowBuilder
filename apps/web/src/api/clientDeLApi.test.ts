@@ -1,6 +1,6 @@
 import { uneSaisieDeDiagnostic } from '@slideshow/application/testing';
 import { describe, expect, it, vi } from 'vitest';
-import { creerLeClientDeLApi } from './clientDeLApi.js';
+import { creerLeClientDeLApi, urlDeLExport } from './clientDeLApi.js';
 
 type Appel = (url: string, options?: RequestInit) => Promise<Response>;
 
@@ -76,6 +76,25 @@ describe('client de l’API', () => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ versionAttendue: 1, prospect, hypotheses, processus }),
     });
+  });
+
+  it('importe en transmettant le fichier tel quel', async () => {
+    const compteRendu = [{ id: 'a', prospect: 'Négoce', statut: 'importe', versionsAjoutees: 3 }];
+    const appel = repondre(200, compteRendu);
+
+    expect(await creerLeClientDeLApi(appel).importerDesDiagnostics('{"format":"…"}')).toStrictEqual(
+      { ok: true, value: compteRendu },
+    );
+    expect(appel).toHaveBeenCalledWith('/api/import', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"format":"…"}',
+    });
+  });
+
+  it('désigne l’export de tous les diagnostics, ou d’un seul', () => {
+    expect(urlDeLExport()).toBe('/api/export');
+    expect(urlDeLExport('a/b')).toBe('/api/diagnostics/a%2Fb/export');
   });
 
   it('encode l’identifiant dans l’URL', async () => {

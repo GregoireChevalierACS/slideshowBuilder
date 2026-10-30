@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ClientDeLApi } from '../api/clientDeLApi.js';
+import { urlDeLExport, type ClientDeLApi } from '../api/clientDeLApi.js';
 import {
   FormulaireDesHypotheses,
   IndicateurDeSauvegarde,
@@ -86,6 +86,10 @@ export const Entretien = ({
           })}
         >
           Présenter ▸
+        </a>
+        {/* L'historique enregistré : une frappe pas encore sauvegardée n'y figure pas. */}
+        <a href={urlDeLExport(id)} download>
+          Exporter
         </a>
         <IndicateurDeSauvegarde
           sauvegarde={sauvegarde}

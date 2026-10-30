@@ -139,6 +139,42 @@ kbd {
   max-width: 1600px;
 }
 
+/* --- Sauvegarde : export et import --- */
+
+.sauvegarde {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.sauvegarde > :is(p, div) {
+  flex-basis: 100%;
+}
+
+/* Un champ fichier présenté comme un bouton : le champ reste focalisable au clavier. */
+.sauvegarde .bouton {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 1px solid var(--bordure);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.sauvegarde .bouton:focus-within {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sauvegarde input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
 .entete-de-l-entretien {
   display: flex;
   align-items: baseline;
