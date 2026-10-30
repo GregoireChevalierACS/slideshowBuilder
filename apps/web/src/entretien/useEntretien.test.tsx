@@ -30,6 +30,7 @@ const unClient = (
   listerLesDiagnostics: vi.fn(),
   ouvrirUnDiagnostic: vi.fn(),
   consulterUnDiagnostic: vi.fn(consulter),
+  importerDesDiagnostics: vi.fn(),
   reviserUnDiagnostic: reviser,
 });
 

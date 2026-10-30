@@ -24,6 +24,7 @@ const unFauxServeur = (initiale: SaisieDeDiagnostic = uneSaisieDeDiagnostic()) =
     listerLesDiagnostics: vi.fn(),
     ouvrirUnDiagnostic: vi.fn(),
     consulterUnDiagnostic: vi.fn(() => Promise.resolve(ok({ id: 'd', ...etat }))),
+    importerDesDiagnostics: vi.fn(),
     reviserUnDiagnostic: vi.fn<ClientDeLApi['reviserUnDiagnostic']>(
       (_id, versionAttendue, modifications) => {
         if (versionAttendue !== etat.version) {
@@ -74,6 +75,14 @@ describe('Entretien', () => {
     expect(panneau).toContain('Niveau : automatisation assistée');
     expect(enDirect().getByText(/Extraction de documents/)).toHaveTextContent('IA');
     expect(screen.getByRole('status')).toHaveTextContent('Enregistré · version 1');
+  });
+
+  it('propose d’exporter ce diagnostic dans un fichier', async () => {
+    await afficher(unFauxServeur().client);
+
+    const lien = screen.getByRole('link', { name: 'Exporter' });
+    expect(lien).toHaveAttribute('href', '/api/diagnostics/d/export');
+    expect(lien).toHaveAttribute('download');
   });
 
   it('crée un processus au clavier à partir d’un modèle, puis l’enregistre', async () => {

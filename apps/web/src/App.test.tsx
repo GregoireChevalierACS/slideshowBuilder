@@ -14,6 +14,7 @@ const unClient = (consulter: ClientDeLApi['consulterUnDiagnostic'] = vi.fn()): C
     }),
   ),
   consulterUnDiagnostic: consulter,
+  importerDesDiagnostics: vi.fn(),
   reviserUnDiagnostic: vi.fn(),
 });
 

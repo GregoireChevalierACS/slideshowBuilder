@@ -23,6 +23,7 @@ const avecAlerte = () =>
 const unClient = (consulter?: ClientDeLApi['consulterUnDiagnostic']): ClientDeLApi => ({
   listerLesDiagnostics: vi.fn(),
   ouvrirUnDiagnostic: vi.fn(),
+  importerDesDiagnostics: vi.fn(),
   reviserUnDiagnostic: vi.fn(),
   consulterUnDiagnostic:
     consulter ??
