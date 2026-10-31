@@ -9,14 +9,14 @@
     "start": "node --env-file-if-exists=.env dist/main.mjs"
   },
   "dependencies": {
-    "@fastify/static": "10.1.7",
+    "@fastify/static": "10.1.8",
     "@slideshow/application": "workspace:*",
     "@slideshow/domain": "workspace:*",
     "fastify": "5.12.7",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "tsdown": "0.23.2",
+    "tsdown": "0.23.3",
     "vitest": "4.1.12"
   }
 }
