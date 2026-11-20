@@ -12,6 +12,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | terminée |
 | **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | terminée |
 | **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | en cours |
+| **8. Premier cas terrain**  | Saisonnalité, coût de la solution et options d’hébergement, tâches abandonnées, modèles de processus d’artisan            | Un diagnostic réel se saisit et se présente sans contournement                                         | en cours |
 
 ## Phase 0 — notes
 
@@ -66,3 +67,11 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Import et export JSON : voir [ADR 0011](docs/adr/0011-export-et-import-des-diagnostics.md). Historique complet, fichier validé en entier avant écriture, import idempotent qui complète un historique poursuivi ailleurs sans jamais écraser un historique divergent.
 - Piège : Windows ne distingue pas la casse des noms de fichier ; `ExportDeDiagnostics.ts` à côté de `exportDeDiagnostics.ts` écrase le second. Le type du fichier vit donc dans `FichierDExport.ts`.
 - Le test E2E de présentation comptait l'aperçu avant son affichage (`count()` n'attend pas) : échec intermittent sur machine chargée, corrigé.
+
+## Phase 8 — notes
+
+Adaptation à un premier cas de terrain : un artisan dont l'activité se concentre sur quelques semaines par an. Les données du client ne sont jamais versionnées ; les tests utilisent un scénario équivalent, « artisan saisonnier ».
+
+- Saisonnalité : voir [ADR 0012](docs/adr/0012-modele-de-calcul-saisonnier.md). Semaines de pointe dans les hypothèses, fréquence saisonnière (en saison, hors saison), fréquences à une décimale, format d'export 2.
+- La case « Activité saisonnière » a d'abord été placée avant la fréquence : le parcours E2E au clavier a montré qu'elle décalait toute la saisie courante. Elle est maintenant en fin de section.
+- La mise à jour de Playwright par Dependabot demande `pnpm --filter @slideshow/web exec playwright install chromium` en local.

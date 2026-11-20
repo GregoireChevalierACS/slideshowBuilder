@@ -3,3 +3,6 @@ dist/
 coverage/
 reports/
 .stryker-tmp/
+
+# Documents de travail locaux, jamais versionnés (exclus par .git/info/exclude).
+feuille-de-route-*.md
