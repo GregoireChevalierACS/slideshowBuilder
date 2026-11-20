@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   ajouterUnProcessus,
   appliquerUnModele,
+  enFrequenceReguliere,
+  enFrequenceSaisonniere,
   nomLibre,
   outilsCites,
   processusVierge,
@@ -223,6 +225,46 @@ describe('saisie de travail', () => {
           modele('saisie-factures-fournisseurs'),
         ),
       ).toMatchObject({ tauxBas: 40, tauxHaut: 70 });
+    });
+  });
+});
+
+describe('fréquence saisonnière', () => {
+  it('reprend la même valeur en saison et hors saison : aucun chiffre ne change', () => {
+    expect(enFrequenceSaisonniere({ nombre: 20, periode: 'jour' })).toStrictEqual({
+      enSaison: 20,
+      horsSaison: 20,
+      periode: 'jour',
+    });
+  });
+
+  it.each(['semaine', 'mois', 'an'] as const)(
+    'compte une fréquence par %s en semaines, la seule autre période d’une saison',
+    (periode) => {
+      expect(enFrequenceSaisonniere({ nombre: 3, periode })).toMatchObject({ periode: 'semaine' });
+    },
+  );
+
+  it('ne change pas une fréquence déjà saisonnière', () => {
+    const saisonniere = { enSaison: 4, horsSaison: 1.5, periode: 'semaine' } as const;
+
+    expect(enFrequenceSaisonniere(saisonniere)).toBe(saisonniere);
+    expect(enFrequenceReguliere({ nombre: 2, periode: 'mois' })).toStrictEqual({
+      nombre: 2,
+      periode: 'mois',
+    });
+  });
+
+  it('redevient régulière avec la valeur hors saison', () => {
+    expect(
+      enFrequenceReguliere({ enSaison: 4, horsSaison: 1.5, periode: 'semaine' }),
+    ).toStrictEqual({ nombre: 1.5, periode: 'semaine' });
+  });
+
+  it('redevient régulière avec la valeur en saison si l’activité n’existe qu’en saison', () => {
+    expect(enFrequenceReguliere({ enSaison: 10, horsSaison: 0, periode: 'jour' })).toStrictEqual({
+      nombre: 10,
+      periode: 'jour',
     });
   });
 });

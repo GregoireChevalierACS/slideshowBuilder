@@ -6,7 +6,13 @@
 // est égale au temps en secondes.
 
 import { describe, expect, it } from 'vitest';
-import { desHypotheses, unMontant, unProcessus } from '../testing/fabriques.js';
+import {
+  desHypotheses,
+  uneFrequenceSaisonniere,
+  unMontant,
+  unProcessus,
+} from '../testing/fabriques.js';
+import type { Periode } from './Frequence.js';
 import { CoutHoraire } from './CoutHoraire.js';
 import { estimerGains } from './estimerGains.js';
 
@@ -190,6 +196,98 @@ describe('Scénarios de référence', () => {
       );
 
       expect(total.tempsActuelParAn.enSecondes).toBe(218 * HEURE);
+    });
+  });
+
+  describe('Artisan saisonnier : 13 semaines de pointe, le gérant seul au bureau', () => {
+    // 228 jours travaillés dont 13 semaines de pointe : 65 jours en saison, 163 hors saison
+    // (32,6 semaines). Le gérant fait tout lui-même, à 36 €/h.
+    const enSaison = (
+      nom: string,
+      dureeEnSecondes: number,
+      [pointe, reste, periode]: readonly [number, number, 'jour' | 'semaine'],
+      tauxBas: number,
+      tauxHaut: number,
+    ) =>
+      unProcessus({
+        nom,
+        dureeEnSecondes,
+        frequence: uneFrequenceSaisonniere(pointe, reste, periode),
+        personnes: 1,
+        tauxBas,
+        tauxHaut,
+        coutHoraire: aTrenteSixEurosDeLHeure(),
+      });
+
+    const estimation = () =>
+      estimerGains(
+        [
+          // 20 × 65 + 8 × 163 = 2 604 réponses × 240 s = 624 960 s (173,6 h)
+          enSaison('Réponses aux e-mails', 240, [20, 8, 'jour'], 30, 45),
+          // 8 × 65 + 3 × 163 = 1 009 questions × 300 s = 302 700 s (84,1 h)
+          enSaison('Questions récurrentes', 300, [8, 3, 'jour'], 50, 75),
+          // 12 × 13 + 3 × 32,6 = 253,8 commandes × 900 s = 228 420 s (63,5 h)
+          enSaison('Commandes aux distributeurs', 900, [12, 3, 'semaine'], 50, 70),
+          // 8 × 13 + 2 × 32,6 = 169,2 dossiers × 1 500 s = 253 800 s (70,5 h)
+          enSaison('Dossiers de primes', 1_500, [8, 2, 'semaine'], 30, 50),
+          // 3 × 13 + 1 × 32,6 = 71,6 h de planning = 257 760 s
+          enSaison('Planning des poseurs', HEURE, [3, 1, 'semaine'], 20, 40),
+          // 4 × 13 + 1,5 × 32,6 = 100,9 fins de chantier × 600 s = 60 540 s (16,8 h)
+          enSaison('Fin de chantier', 600, [4, 1.5, 'semaine'], 70, 90),
+        ],
+        desHypotheses(228, 1_607, 13),
+      );
+
+    it('passe aujourd’hui 1 728 180 s, soit 480,05 h par an, sur ces tâches', () => {
+      expect(estimation().total.tempsActuelParAn.enSecondes).toBe(1_728_180);
+    });
+
+    it('gagnerait de 173,1 h à 264,6 h par an', () => {
+      // Bas : 187 488 + 151 350 + 114 210 + 76 140 + 51 552 + 42 378 = 623 118 s
+      // Haut : 281 232 + 227 025 + 159 894 + 126 900 + 103 104 + 54 486 = 952 641 s
+      expect(estimation().total.tempsGagneParAn).toMatchObject({
+        bas: { enSecondes: 623_118 },
+        haut: { enSecondes: 952_641 },
+      });
+    });
+
+    it('vaut 17 281,80 € par an aujourd’hui (1 s = 1 centime à 36 €/h)', () => {
+      expect(estimation().total.valeurActuelleParAn.enCentimes).toBe(1_728_180);
+    });
+
+    it('donne les mêmes totaux que deux lignes régulières par processus, en saison et hors saison', () => {
+      // Le contournement d'avant la saisonnalité : chaque saison ramenée à une fréquence annuelle.
+      const deuxLignes = (
+        nom: string,
+        duree: number,
+        [pointe, reste]: readonly [number, number],
+        tauxBas: number,
+        tauxHaut: number,
+      ) =>
+        [pointe, reste].map((nombre, i) =>
+          unProcessus({
+            nom: `${nom} ${String(i)}`,
+            dureeEnSecondes: duree,
+            frequence: [nombre, 'an' satisfies Periode],
+            personnes: 1,
+            tauxBas,
+            tauxHaut,
+            coutHoraire: aTrenteSixEurosDeLHeure(),
+          }),
+        );
+      const contournement = estimerGains(
+        [
+          ...deuxLignes('Réponses aux e-mails', 240, [1_300, 1_304], 30, 45),
+          ...deuxLignes('Questions récurrentes', 300, [520, 489], 50, 75),
+          ...deuxLignes('Commandes aux distributeurs', 900, [156, 97.8], 50, 70),
+          ...deuxLignes('Dossiers de primes', 1_500, [104, 65.2], 30, 50),
+          ...deuxLignes('Planning des poseurs', HEURE, [39, 32.6], 20, 40),
+          ...deuxLignes('Fin de chantier', 600, [52, 48.9], 70, 90),
+        ],
+        desHypotheses(),
+      );
+
+      expect(estimation().total).toStrictEqual(contournement.total);
     });
   });
 });

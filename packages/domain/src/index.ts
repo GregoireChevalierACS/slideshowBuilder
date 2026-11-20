@@ -13,7 +13,13 @@ export {
   type GainDUnProcessus,
   type TotalDesGains,
 } from './gains/estimerGains.js';
-export { Frequence, type FrequenceInvalide, type Periode } from './gains/Frequence.js';
+export {
+  Frequence,
+  type FrequenceInvalide,
+  type Periode,
+  type PeriodeSaisonniere,
+  type RepartitionDeFrequence,
+} from './gains/Frequence.js';
 export { HypothesesDeCalcul, type HypothesesInvalides } from './gains/HypothesesDeCalcul.js';
 export { Montant, type MontantInvalide } from './gains/Montant.js';
 export { Pourcentage, type PourcentageInvalide } from './gains/Pourcentage.js';

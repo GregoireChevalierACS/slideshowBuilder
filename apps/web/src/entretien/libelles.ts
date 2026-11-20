@@ -6,6 +6,7 @@ import type {
   NatureDeTache,
   NiveauDAutomatisation,
   Periode,
+  PeriodeSaisonniere,
 } from '@slideshow/domain';
 
 // Les libellés des choix fermés du domaine. Typés Record : un choix ajouté au domaine sans libellé
@@ -77,6 +78,11 @@ export const LIBELLES_DES_NIVEAUX: Readonly<Record<NiveauDAutomatisation, string
 };
 
 export const CHOIX_DES_PERIODES = enChoix(LIBELLES_DES_PERIODES);
+/** Une saison se compte par jour ou par semaine. */
+export const CHOIX_DES_PERIODES_SAISONNIERES: Choix<PeriodeSaisonniere> = [
+  ['jour', LIBELLES_DES_PERIODES.jour],
+  ['semaine', LIBELLES_DES_PERIODES.semaine],
+];
 export const CHOIX_DES_NATURES = enChoix(LIBELLES_DES_NATURES);
 export const CHOIX_DES_ACCES = enChoix(LIBELLES_DES_ACCES);
 export const CHOIX_DES_CATEGORIES = enChoix(LIBELLES_DES_CATEGORIES);

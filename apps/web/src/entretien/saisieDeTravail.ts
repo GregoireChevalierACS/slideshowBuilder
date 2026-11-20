@@ -2,6 +2,7 @@ import {
   suggererLesTaux,
   type ModeleDeProcessus,
   type SaisieDeDiagnostic,
+  type SaisieDeFrequence,
   type SaisieDeProcessus,
   type SaisieDOutil,
   type SuggestionDeTaux,
@@ -127,3 +128,26 @@ export const appliquerUnModele = (
   const suggestion = suggestionDe(applique);
   return suggestion === undefined ? applique : avecLesTaux(applique, suggestion);
 };
+
+/**
+ * Passe une fréquence en saisonnière : la même valeur en saison et hors saison, ce qui ne change
+ * aucun chiffre tant qu'on ne l'ajuste pas. Une saison se compte par jour ou par semaine ; une
+ * fréquence mensuelle ou annuelle repart par semaine, à ajuster.
+ */
+export const enFrequenceSaisonniere = (frequence: SaisieDeFrequence): SaisieDeFrequence =>
+  'enSaison' in frequence
+    ? frequence
+    : {
+        enSaison: frequence.nombre,
+        horsSaison: frequence.nombre,
+        periode: frequence.periode === 'jour' ? 'jour' : 'semaine',
+      };
+
+/** Revient à une fréquence régulière : celle du reste de l'année, ou de la saison si elle est nulle. */
+export const enFrequenceReguliere = (frequence: SaisieDeFrequence): SaisieDeFrequence =>
+  'enSaison' in frequence
+    ? {
+        nombre: frequence.horsSaison === 0 ? frequence.enSaison : frequence.horsSaison,
+        periode: frequence.periode,
+      }
+    : frequence;

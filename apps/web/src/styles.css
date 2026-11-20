@@ -139,6 +139,13 @@ kbd {
   max-width: 1600px;
 }
 
+/* Case à cocher et son libellé sur une ligne (les autres libellés sont au-dessus du champ). */
+label.interrupteur {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
 /* --- Sauvegarde : export et import --- */
 
 .sauvegarde {

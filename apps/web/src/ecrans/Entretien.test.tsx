@@ -285,6 +285,97 @@ describe('Entretien', () => {
     expect(screen.queryByRole('section', { name: 'Tout le diagnostic' })).not.toBeInTheDocument();
   });
 
+  it('saisit une activité saisonnière : deux fréquences et des semaines de pointe', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+
+    await userEvent.click(screen.getByLabelText('Activité saisonnière'));
+    // Sans semaine de pointe, la valeur en saison n'a pas encore d'effet : l'interface le dit.
+    expect(screen.getByText(/seule la valeur hors saison compte/)).toBeInTheDocument();
+    await userEvent.clear(screen.getByLabelText('Nombre de fois en saison, par personne'));
+    await userEvent.type(screen.getByLabelText('Nombre de fois en saison, par personne'), '30');
+    await userEvent.clear(screen.getByLabelText('Nombre de fois hors saison, par personne'));
+    await userEvent.type(screen.getByLabelText('Nombre de fois hors saison, par personne'), '8,5');
+    await userEvent.selectOptions(screen.getByLabelText('Période'), 'par semaine');
+    await waitFor(() => {
+      expect(etat.saisie.processus[0]?.frequence).toStrictEqual({
+        enSaison: 30,
+        horsSaison: 8.5,
+        periode: 'semaine',
+      });
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hypothèses de calcul' }));
+    await userEvent.clear(screen.getByLabelText('Semaines de pointe'));
+    await userEvent.type(screen.getByLabelText('Semaines de pointe'), '13');
+    await waitFor(() => {
+      expect(etat.saisie.hypotheses.semainesDePointe).toBe(13);
+    });
+  });
+
+  it('revient à une fréquence régulière avec la valeur hors saison', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+
+    await userEvent.click(screen.getByLabelText('Activité saisonnière'));
+    await userEvent.clear(screen.getByLabelText('Nombre de fois hors saison, par personne'));
+    await userEvent.type(screen.getByLabelText('Nombre de fois hors saison, par personne'), '12');
+    await userEvent.click(screen.getByLabelText('Activité saisonnière'));
+
+    expect(screen.getByLabelText('Nombre de fois, par personne')).toHaveValue('12');
+    await waitFor(() => {
+      expect(etat.saisie.processus[0]?.frequence).toStrictEqual({ nombre: 12, periode: 'jour' });
+    });
+  });
+
+  it('signale une fréquence trop précise sous le champ', async () => {
+    await afficher(unFauxServeur().client);
+
+    await userEvent.clear(screen.getByLabelText('Nombre de fois, par personne'));
+    await userEvent.type(screen.getByLabelText('Nombre de fois, par personne'), '1,25');
+
+    expect(await screen.findByText('Une décimale au plus, par exemple 1,5.')).toBeInTheDocument();
+  });
+
+  it('retire les semaines de pointe ramenées à 0, et signale un nombre impossible', async () => {
+    const { client, etat } = unFauxServeur(
+      uneSaisieDeDiagnostic({
+        hypotheses: {
+          joursTravaillesParAn: 228,
+          heuresAnnuellesTempsPlein: 1_607,
+          semainesDePointe: 13,
+        },
+      }),
+    );
+    await afficher(client);
+    // Avec des semaines de pointe, la valeur en saison compte : pas d'avertissement.
+    await userEvent.click(screen.getByLabelText('Activité saisonnière'));
+    expect(screen.queryByText(/seule la valeur hors saison compte/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Hypothèses de calcul' }));
+
+    await userEvent.clear(screen.getByLabelText('Semaines de pointe'));
+    await userEvent.type(screen.getByLabelText('Semaines de pointe'), '60');
+    const formulaire = within(screen.getByRole('form', { name: 'Hypothèses de calcul' }));
+    expect(
+      await formulaire.findByText(/sans dépasser les semaines travaillées/),
+    ).toBeInTheDocument();
+    // L'erreur est sous le champ des semaines, pas sous celui des heures.
+    expect(formulaire.getByLabelText('Semaines de pointe')).toHaveAttribute('aria-invalid', 'true');
+    expect(formulaire.getByLabelText('Heures annuelles d’un temps plein')).toHaveAttribute(
+      'aria-invalid',
+      'false',
+    );
+
+    await userEvent.clear(screen.getByLabelText('Semaines de pointe'));
+    await userEvent.type(screen.getByLabelText('Semaines de pointe'), '0');
+    await waitFor(() => {
+      expect(etat.saisie.hypotheses).toStrictEqual({
+        joursTravaillesParAn: 228,
+        heuresAnnuellesTempsPlein: 1_607,
+      });
+    });
+  });
+
   it('modifie les hypothèses de calcul', async () => {
     const { client, etat } = unFauxServeur();
     await afficher(client);

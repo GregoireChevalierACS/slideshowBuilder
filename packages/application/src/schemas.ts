@@ -8,6 +8,7 @@ import type {
   ModeDAcces,
   NatureDeTache,
   Periode,
+  PeriodeSaisonniere,
   PublicVise,
 } from '@slideshow/domain';
 import { z } from 'zod';
@@ -60,10 +61,18 @@ const schemaDeCoutHoraire = z.discriminatedUnion('kind', [
 const schemaDeProcessus = z.strictObject({
   nom: texte,
   dureeUnitaireEnSecondes: entier,
-  frequence: z.strictObject({
-    nombre: entier,
-    periode: choixDuDomaine<Periode>()(['jour', 'semaine', 'mois', 'an']),
-  }),
+  // Le nombre peut porter une décimale (1,5 par semaine) ; le domaine en vérifie la précision.
+  frequence: z.union([
+    z.strictObject({
+      nombre: z.number(),
+      periode: choixDuDomaine<Periode>()(['jour', 'semaine', 'mois', 'an']),
+    }),
+    z.strictObject({
+      enSaison: z.number(),
+      horsSaison: z.number(),
+      periode: choixDuDomaine<PeriodeSaisonniere>()(['jour', 'semaine']),
+    }),
+  ]),
   personnes: entier,
   tauxBas: entier,
   tauxHaut: entier,
@@ -99,6 +108,7 @@ export const schemaDesModifications = z.strictObject({
   hypotheses: z.strictObject({
     joursTravaillesParAn: entier,
     heuresAnnuellesTempsPlein: entier,
+    semainesDePointe: entier.exactOptional(),
   }),
   processus: z.array(schemaDeProcessus).max(100),
 });
@@ -124,12 +134,13 @@ export const schemaDeVersion = z.strictObject({
 
 /** Reconnaît un fichier exporté par cette application, quelle que soit la version de son format. */
 export const FORMAT_D_EXPORT = 'slideshow-builder/diagnostics';
-export const VERSION_DU_FORMAT_D_EXPORT = 1;
+/** 2 : fréquences saisonnières et semaines de pointe. Les fichiers en version 1 restent lisibles. */
+export const VERSION_DU_FORMAT_D_EXPORT = 2;
 
 /** Un fichier d'export : l'historique complet de chaque diagnostic, version par version. */
 export const schemaDExport = z.strictObject({
   format: z.literal(FORMAT_D_EXPORT),
-  versionDuFormat: z.literal(VERSION_DU_FORMAT_D_EXPORT),
+  versionDuFormat: z.union([z.literal(1), z.literal(VERSION_DU_FORMAT_D_EXPORT)]),
   exporteLe: z.string(),
   diagnostics: z
     .array(

@@ -23,7 +23,7 @@ import { creerLApplication } from './creerLApplication.js';
 
 const unExportVide = () => ({
   format: 'slideshow-builder/diagnostics',
-  versionDuFormat: 1,
+  versionDuFormat: 2,
   exporteLe: '2026-10-27',
   diagnostics: [],
 });
@@ -530,7 +530,7 @@ describe('export et import', () => {
 
   it.each([
     ['un autre JSON', { nom: 'x' }, 'n’est pas un export'],
-    ['un format plus récent', { ...unExportVide(), versionDuFormat: 2 }, 'version plus récente'],
+    ['un format plus récent', { ...unExportVide(), versionDuFormat: 3 }, 'version plus récente'],
     [
       'une structure modifiée',
       { ...unExportVide(), diagnostics: [{ id: 'a' }] },
