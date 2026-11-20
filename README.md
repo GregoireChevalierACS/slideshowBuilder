@@ -70,3 +70,4 @@ Les hooks Git refusent tout commit direct sur `main` et tout message mal formé.
 - [Feuille de route](ROADMAP.md)
 - [Décisions d'architecture](docs/adr/)
 - [Catalogue des erreurs de l'API](docs/problemes.md)
+- [Bonnes pratiques appliquées](docs/bonnes-pratiques.md)
