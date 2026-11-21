@@ -276,6 +276,12 @@ const Hypotheses = ({
       {d.hypotheses.joursTravaillesParAn} jours travaillés par an ·{' '}
       {d.hypotheses.heuresAnnuellesTempsPlein} h pour un temps plein
     </p>
+    {d.hypotheses.semainesDePointe > 0 && (
+      <p className="contexte">
+        dont {d.hypotheses.semainesDePointe} semaines de pointe : {d.hypotheses.joursEnSaison} jours
+        en saison, {d.hypotheses.joursHorsSaison} hors saison
+      </p>
+    )}
     <table className="tableau">
       <thead>
         <tr>

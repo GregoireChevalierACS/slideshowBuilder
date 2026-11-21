@@ -28,6 +28,30 @@ describe('lireLaSaisie', () => {
     expect(diagnostic.hypotheses).toMatchObject({
       joursTravaillesParAn: 228,
       heuresAnnuellesTempsPlein: 1_607,
+      semainesDePointe: 0,
+    });
+  });
+
+  it('lit une activité saisonnière : semaines de pointe et fréquence en saison', () => {
+    const diagnostic = lu(
+      uneSaisieDeDiagnostic({
+        hypotheses: {
+          joursTravaillesParAn: 228,
+          heuresAnnuellesTempsPlein: 1_607,
+          semainesDePointe: 13,
+        },
+        processus: [
+          uneSaisieDeProcessus({ frequence: { enSaison: 4, horsSaison: 1.5, periode: 'semaine' } }),
+        ],
+      }),
+    );
+
+    expect(diagnostic.hypotheses.semainesDePointe).toBe(13);
+    expect(diagnostic.processus[0]?.processus.frequence.repartition).toStrictEqual({
+      kind: 'Saisonniere',
+      enSaison: 4,
+      horsSaison: 1.5,
+      periode: 'semaine',
     });
   });
 
@@ -37,7 +61,7 @@ describe('lireLaSaisie', () => {
     expect(premier?.processus).toMatchObject({
       nom: 'Saisie des factures fournisseurs',
       dureeUnitaire: { enSecondes: 240 },
-      frequence: { nombre: 20, periode: 'jour' },
+      frequence: { repartition: { kind: 'Reguliere', nombre: 20, periode: 'jour' } },
       effectif: { personnes: 2 },
       tauxBas: { valeur: 70 },
       tauxHaut: { valeur: 90 },
@@ -103,7 +127,12 @@ describe('lireLaSaisie', () => {
     it.each([
       [{ nom: '' }, 'nom', 'NomDeProcessusVide'],
       [{ dureeUnitaireEnSecondes: -1 }, 'dureeUnitaireEnSecondes', 'DureeNegative'],
-      [{ frequence: { nombre: 0, periode: 'jour' } }, 'frequence', 'FrequenceInferieureAUn'],
+      [{ frequence: { nombre: 0, periode: 'jour' } }, 'frequence', 'FrequenceNulle'],
+      [
+        { frequence: { enSaison: 2, horsSaison: 1.25, periode: 'semaine' } },
+        'frequence',
+        'FrequenceTropPrecise',
+      ],
       [{ personnes: 0 }, 'personnes', 'EffectifInferieurAUn'],
       [{ tauxBas: 120 }, 'tauxBas', 'PourcentageHorsBornes'],
       [{ tauxHaut: -5 }, 'tauxHaut', 'PourcentageHorsBornes'],
@@ -222,12 +251,23 @@ describe('lireLaSaisie', () => {
       const processus = fc
         .record({
           dureeUnitaireEnSecondes: fc.nat(36_000),
-          frequence: fc.record(
-            {
-              nombre: fc.integer({ min: 1, max: 100 }),
-              periode: fc.constantFrom('jour', 'semaine', 'mois', 'an' as const),
-            },
-            { noNullPrototype: true },
+          frequence: fc.oneof(
+            fc.record(
+              {
+                // Une décimale au plus : 0,1 à 100.
+                nombre: fc.integer({ min: 1, max: 1_000 }).map((n) => n / 10),
+                periode: fc.constantFrom('jour', 'semaine', 'mois', 'an' as const),
+              },
+              { noNullPrototype: true },
+            ),
+            fc.record(
+              {
+                enSaison: fc.integer({ min: 1, max: 1_000 }).map((n) => n / 10),
+                horsSaison: fc.integer({ min: 0, max: 1_000 }).map((n) => n / 10),
+                periode: fc.constantFrom('jour', 'semaine' as const),
+              },
+              { noNullPrototype: true },
+            ),
           ),
           personnes: fc.integer({ min: 1, max: 500 }),
           taux: fc.tuple(fc.integer({ min: 0, max: 100 }), fc.integer({ min: 0, max: 100 })),
@@ -253,7 +293,19 @@ describe('lireLaSaisie', () => {
         .map((liste) =>
           liste.map((p, i): SaisieDeProcessus => ({ ...p, nom: `Processus ${String(i + 1)}` })),
         )
-        .map((liste) => uneSaisieDeDiagnostic({ processus: liste }));
+        .chain((liste) =>
+          // Sans saison, le champ est absent : un 0 explicite ne se relirait pas à l'identique.
+          fc.option(fc.integer({ min: 1, max: 45 }), { nil: undefined }).map((semainesDePointe) =>
+            uneSaisieDeDiagnostic({
+              processus: liste,
+              hypotheses: {
+                joursTravaillesParAn: 228,
+                heuresAnnuellesTempsPlein: 1_607,
+                ...(semainesDePointe === undefined ? {} : { semainesDePointe }),
+              },
+            }),
+          ),
+        );
 
       fc.assert(
         fc.property(saisie, (s) => {

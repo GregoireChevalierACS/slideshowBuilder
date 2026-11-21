@@ -6,6 +6,7 @@ describe('HypothesesDeCalcul', () => {
     expect(HypothesesDeCalcul.parDefaut()).toMatchObject({
       joursTravaillesParAn: 228,
       heuresAnnuellesTempsPlein: 1_607,
+      semainesDePointe: 0,
     });
   });
 
@@ -48,6 +49,54 @@ describe('HypothesesDeCalcul', () => {
     ).toStrictEqual({
       ok: false,
       error: { kind: 'HeuresAnnuellesInvalides', valeur: heuresAnnuellesTempsPlein },
+    });
+  });
+
+  describe('semaines de pointe', () => {
+    const avec = (semainesDePointe: number, joursTravaillesParAn = 228) =>
+      HypothesesDeCalcul.creer({
+        joursTravaillesParAn,
+        heuresAnnuellesTempsPlein: 1_607,
+        semainesDePointe,
+      });
+
+    it('partagent les jours travaillés : 13 semaines font 65 jours en saison et 163 hors saison', () => {
+      const hypotheses = avec(13);
+
+      expect(hypotheses.ok && hypotheses.value).toMatchObject({
+        semainesDePointe: 13,
+        joursEnSaison: 65,
+        joursHorsSaison: 163,
+      });
+    });
+
+    it('valent 0 si rien n’est précisé : toute l’année est hors saison', () => {
+      const hypotheses = HypothesesDeCalcul.creer({
+        joursTravaillesParAn: 228,
+        heuresAnnuellesTempsPlein: 1_607,
+      });
+
+      expect(hypotheses.ok && hypotheses.value).toMatchObject({
+        semainesDePointe: 0,
+        joursEnSaison: 0,
+        joursHorsSaison: 228,
+      });
+    });
+
+    it.each([0, 45])('acceptent %s semaine(s) sur 228 jours travaillés', (semaines) => {
+      expect(avec(semaines).ok).toBe(true);
+    });
+
+    it.each([-1, 46, 2.5])('refusent %s semaine(s) sur 228 jours (45 au plus)', (semaines) => {
+      expect(avec(semaines)).toStrictEqual({
+        ok: false,
+        error: { kind: 'SemainesDePointeInvalides', valeur: semaines, maximum: 45 },
+      });
+    });
+
+    it('ne dépassent jamais les jours travaillés : 2 semaines au plus sur 12 jours', () => {
+      expect(avec(3, 12)).toMatchObject({ ok: false, error: { maximum: 2 } });
+      expect(avec(2, 12).ok).toBe(true);
     });
   });
 });

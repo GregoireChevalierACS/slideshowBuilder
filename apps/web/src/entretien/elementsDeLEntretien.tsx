@@ -60,30 +60,52 @@ export const FormulaireDesHypotheses = ({
   readonly hypotheses: SaisieDeDiagnostic['hypotheses'];
   readonly modifier: (hypotheses: SaisieDeDiagnostic['hypotheses']) => void;
   readonly erreur: SaisieInvalide | undefined;
-}) => (
-  <form className="formulaire-des-hypotheses" aria-label="Hypothèses de calcul">
-    <Section titre="Hypothèses de calcul">
-      <ChampNumerique
-        libelle="Jours travaillés par an"
-        unite="j"
-        valeur={hypotheses.joursTravaillesParAn}
-        modifier={(joursTravaillesParAn) => {
-          modifier({ ...hypotheses, joursTravaillesParAn });
-        }}
-      />
-      <ChampNumerique
-        libelle="Heures annuelles d’un temps plein"
-        unite="h"
-        valeur={hypotheses.heuresAnnuellesTempsPlein}
-        erreur={messageDuChamp(erreur, 'hypotheses')}
-        modifier={(heuresAnnuellesTempsPlein) => {
-          modifier({ ...hypotheses, heuresAnnuellesTempsPlein });
-        }}
-      />
-      <p className="aide">228 jours et 1 607 h correspondent à un temps plein en France.</p>
-    </Section>
-  </form>
-);
+}) => {
+  // Le domaine signale toutes les hypothèses sous un même champ : on place l'erreur au bon endroit.
+  const surLesSemaines = erreur?.erreur.kind === 'SemainesDePointeInvalides';
+  return (
+    <form className="formulaire-des-hypotheses" aria-label="Hypothèses de calcul">
+      <Section titre="Hypothèses de calcul">
+        <ChampNumerique
+          libelle="Jours travaillés par an"
+          unite="j"
+          valeur={hypotheses.joursTravaillesParAn}
+          modifier={(joursTravaillesParAn) => {
+            modifier({ ...hypotheses, joursTravaillesParAn });
+          }}
+        />
+        <ChampNumerique
+          libelle="Heures annuelles d’un temps plein"
+          unite="h"
+          valeur={hypotheses.heuresAnnuellesTempsPlein}
+          erreur={surLesSemaines ? undefined : messageDuChamp(erreur, 'hypotheses')}
+          modifier={(heuresAnnuellesTempsPlein) => {
+            modifier({ ...hypotheses, heuresAnnuellesTempsPlein });
+          }}
+        />
+        <p className="aide">228 jours et 1 607 h correspondent à un temps plein en France.</p>
+        <ChampNumerique
+          libelle="Semaines de pointe"
+          unite="sem."
+          valeur={hypotheses.semainesDePointe ?? 0}
+          erreur={surLesSemaines ? messageDuChamp(erreur, 'hypotheses') : undefined}
+          modifier={(semainesDePointe) => {
+            // 0 semaine : pas de saison, le champ disparaît de la saisie (comme avant la saisonnalité).
+            modifier({
+              joursTravaillesParAn: hypotheses.joursTravaillesParAn,
+              heuresAnnuellesTempsPlein: hypotheses.heuresAnnuellesTempsPlein,
+              ...(semainesDePointe === 0 ? {} : { semainesDePointe }),
+            });
+          }}
+        />
+        <p className="aide">
+          Pour une activité saisonnière : les processus saisonniers y ont leur fréquence « en saison
+          ».
+        </p>
+      </Section>
+    </form>
+  );
+};
 
 export const IndicateurDeSauvegarde = ({
   sauvegarde,

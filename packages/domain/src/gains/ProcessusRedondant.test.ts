@@ -29,7 +29,7 @@ describe('ProcessusRedondant', () => {
       value: {
         nom: 'Saisie des factures fournisseurs',
         dureeUnitaire: { enSecondes: 240 },
-        frequence: { nombre: 20, periode: 'jour' },
+        frequence: { repartition: { kind: 'Reguliere', nombre: 20, periode: 'jour' } },
         effectif: { personnes: 2 },
         tauxBas: { valeur: 70 },
         tauxHaut: { valeur: 90 },

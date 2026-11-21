@@ -1,7 +1,14 @@
-import type { CoutHoraire, Diagnostic, Outil, ProcessusDuDiagnostic } from '@slideshow/domain';
+import type {
+  CoutHoraire,
+  Diagnostic,
+  Frequence,
+  Outil,
+  ProcessusDuDiagnostic,
+} from '@slideshow/domain';
 import type {
   SaisieDeCoutHoraire,
   SaisieDeDiagnostic,
+  SaisieDeFrequence,
   SaisieDeProcessus,
   SaisieDOutil,
 } from './SaisieDeDiagnostic.js';
@@ -21,10 +28,19 @@ const decrireLeCoutHoraire = (cout: CoutHoraire): SaisieDeCoutHoraire =>
         coefficientDeCharges: cout.coefficientDeCharges,
       };
 
+const decrireLaFrequence = ({ repartition }: Frequence): SaisieDeFrequence =>
+  repartition.kind === 'Reguliere'
+    ? { nombre: repartition.nombre, periode: repartition.periode }
+    : {
+        enSaison: repartition.enSaison,
+        horsSaison: repartition.horsSaison,
+        periode: repartition.periode,
+      };
+
 const decrireLeProcessus = ({ processus, profil }: ProcessusDuDiagnostic): SaisieDeProcessus => ({
   nom: processus.nom,
   dureeUnitaireEnSecondes: processus.dureeUnitaire.enSecondes,
-  frequence: { nombre: processus.frequence.nombre, periode: processus.frequence.periode },
+  frequence: decrireLaFrequence(processus.frequence),
   personnes: processus.effectif.personnes,
   tauxBas: processus.tauxBas.valeur,
   tauxHaut: processus.tauxHaut.valeur,
@@ -52,6 +68,10 @@ export const decrireLeDiagnostic = (diagnostic: Diagnostic): SaisieDeDiagnostic 
     hypotheses: {
       joursTravaillesParAn: diagnostic.hypotheses.joursTravaillesParAn,
       heuresAnnuellesTempsPlein: diagnostic.hypotheses.heuresAnnuellesTempsPlein,
+      // Sans saison, le champ reste absent : les saisies d'avant la saisonnalité sont inchangées.
+      ...(diagnostic.hypotheses.semainesDePointe === 0
+        ? {}
+        : { semainesDePointe: diagnostic.hypotheses.semainesDePointe }),
     },
     processus: diagnostic.processus.map(decrireLeProcessus),
   };

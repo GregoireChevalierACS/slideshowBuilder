@@ -175,6 +175,31 @@ describe('DiapositiveAffichee', () => {
     expect(contenu).toContain('40 000 € brut × 1,45 / 1607 h = 36,09 €/h');
   });
 
+  it('hypothèses : les semaines de pointe d’une activité saisonnière, et seulement elle', () => {
+    const lu = lireLaSaisie(
+      uneSaisieDeDiagnostic({
+        hypotheses: {
+          joursTravaillesParAn: 228,
+          heuresAnnuellesTempsPlein: 1_607,
+          semainesDePointe: 13,
+        },
+        processus: [
+          uneSaisieDeProcessus({ frequence: { enSaison: 4, horsSaison: 1.5, periode: 'semaine' } }),
+        ],
+      }),
+      1,
+    );
+    if (!lu.ok) throw new Error('saisie de test invalide');
+    const saisonnier = pagesDuDeck(
+      construireDeck(lu.value, { public: 'technique', duree: 'complete' }),
+    );
+
+    expect(texte(page(saisonnier, 'Hypotheses'))).toContain(
+      'dont 13 semaines de pointe : 65 jours en saison, 163 hors saison',
+    );
+    expect(texte(page(unDeck(), 'Hypotheses'))).not.toContain('semaines de pointe');
+  });
+
   it('se rend pour un dirigeant en version courte', () => {
     const pages = unDeck({ public: 'dirigeant', duree: 'courte' });
 
