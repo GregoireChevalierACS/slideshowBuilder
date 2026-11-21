@@ -78,4 +78,5 @@ Adaptation à un premier cas de terrain : un artisan dont l'activité se concent
 - Le contrôle de débordement a fixé les limites des options : 4 points de 80 caractères débordaient de 40 % ; 3 points de 40 caractères tiennent avec la réserve.
 - Le test de l'écran d'entretien a trouvé que la sauvegarde automatique n'envoyait que le prospect, les hypothèses et les processus : les options n'auraient jamais été enregistrées.
 - Police embarquée : voir [ADR 0014](docs/adr/0014-police-embarquee.md). La CI a fait déborder la diapositive des options sous Linux (un point de 40 caractères sur deux lignes) alors qu'elle passait sous Windows avec une marge confortable. Inter est désormais embarquée : même rendu partout, PDF compris.
+- Tâches abandonnées : voir [ADR 0015](docs/adr/0015-taches-abandonnees.md). Une tâche qui n'est plus faite sort du coût caché et du gain ; elle se chiffre à part en travail rattrapé, et la feuille de route la garde comme chantier. Format d'export 4.
 - La mise à jour de Playwright par Dependabot demande `pnpm --filter @slideshow/web exec playwright install chromium` en local.

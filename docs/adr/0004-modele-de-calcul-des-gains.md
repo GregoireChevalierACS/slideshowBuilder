@@ -44,3 +44,4 @@ ETP libérés      = temps gagné total / heures annuelles d'un temps plein
 
 - **2026-11-20** : fréquences saisonnières et semaines de pointe, fréquences à une décimale. Voir [ADR 0012](0012-modele-de-calcul-saisonnier.md).
 - **2026-11-21** : coût de la solution et coût par heure récupérée, qui remplacent le retour sur investissement reporté. Voir [ADR 0013](0013-cout-de-la-solution.md).
+- **2026-11-21** : une tâche qui n'est plus faite aujourd'hui sort du coût caché et du gain, et se chiffre à part en travail rattrapé. Voir [ADR 0015](0015-taches-abandonnees.md).
