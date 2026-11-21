@@ -107,6 +107,52 @@ describe('estimerGains', () => {
     expect(total.tempsActuelParAn.enSecondes).toBe(722 * HEURE);
   });
 
+  describe('tâches abandonnées', () => {
+    // La relance des devis n'est plus faite : 10 min × 15 par semaine × 45,6 semaines = 114 h.
+    const avecUneRelanceAbandonnee = () =>
+      estimer([
+        {},
+        {
+          nom: 'Relance des devis',
+          dureeEnSecondes: 600,
+          frequence: [15, 'semaine'],
+          personnes: 1,
+          tauxBas: 80,
+          tauxHaut: 95,
+          abandonne: true,
+        },
+      ]);
+
+    it('n’entrent ni dans le coût caché ni dans le gain', () => {
+      const { parProcessus, total } = avecUneRelanceAbandonnee();
+
+      expect(parProcessus.map((g) => g.processus.nom)).toStrictEqual([
+        'Saisie des factures fournisseurs',
+      ]);
+      expect(total).toStrictEqual(estimer([{}]).total);
+    });
+
+    it('sont chiffrées à part, en travail rattrapé : 114 h nécessaires, 91,2 à 108,3 h faites', () => {
+      const { travailRattrape } = avecUneRelanceAbandonnee();
+
+      expect(travailRattrape.parProcessus.map((g) => g.processus.nom)).toStrictEqual([
+        'Relance des devis',
+      ]);
+      expect(travailRattrape.total).toMatchObject({
+        tempsActuelParAn: { enSecondes: 114 * HEURE },
+        tempsGagneParAn: { bas: { enSecondes: 328_320 }, haut: { enSecondes: 389_880 } },
+      });
+    });
+
+    it('déclenchent aussi l’alerte de cohérence', () => {
+      const { alertes } = estimer([
+        { dureeEnSecondes: 8 * HEURE, frequence: [1, 'jour'], personnes: 1, abandonne: true },
+      ]);
+
+      expect(alertes).toHaveLength(1);
+    });
+  });
+
   it('donne un total nul sans processus', () => {
     expect(estimer([])).toMatchObject({
       parProcessus: [],
@@ -163,6 +209,24 @@ describe('estimerGains', () => {
   });
 
   describe('propriétés', () => {
+    it('une tâche abandonnée ajoutée ne change ni le coût caché ni le gain', () => {
+      fc.assert(
+        fc.property(
+          fc.array(descriptionArbitraire(), { maxLength: 5 }),
+          descriptionArbitraire(),
+          (faites, abandonnee) => {
+            const nommees = faites.map((d, i) => ({ ...d, nom: `Tâche ${String(i)}` }));
+            return (
+              JSON.stringify(estimer(nommees).total) ===
+              JSON.stringify(
+                estimer([...nommees, { ...abandonnee, nom: 'Abandonnée', abandonne: true }]).total,
+              )
+            );
+          },
+        ),
+      );
+    });
+
     const plusieursProcessus = () => fc.array(descriptionArbitraire(), { maxLength: 8 });
 
     it('la somme des lignes affichées vaut toujours le total affiché', () => {

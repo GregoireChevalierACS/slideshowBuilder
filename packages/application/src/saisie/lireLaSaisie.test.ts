@@ -77,6 +77,20 @@ describe('lireLaSaisie', () => {
     });
   });
 
+  it('lit une tâche qui n’est plus faite aujourd’hui, et sinon la considère comme faite', () => {
+    const [abandonnee, faite] = lu(
+      uneSaisieDeDiagnostic({
+        processus: [
+          uneSaisieDeProcessus({ nom: 'Relance des devis', abandonne: true }),
+          uneSaisieDeProcessus({ nom: 'Saisie' }),
+        ],
+      }),
+    ).processus;
+
+    expect(abandonnee?.processus.abandonne).toBe(true);
+    expect(faite?.processus.abandonne).toBe(false);
+  });
+
   it('lit un coût horaire déduit du salaire', () => {
     const diagnostic = lu(
       avecUnProcessus({
@@ -343,6 +357,7 @@ describe('lireLaSaisie', () => {
           ),
           personnes: fc.integer({ min: 1, max: 500 }),
           taux: fc.tuple(fc.integer({ min: 0, max: 100 }), fc.integer({ min: 0, max: 100 })),
+          abandonne: fc.boolean(),
           coutHoraire,
           profil: fc.record(
             {
@@ -355,7 +370,9 @@ describe('lireLaSaisie', () => {
             { noNullPrototype: true },
           ),
         })
-        .map(({ taux, ...reste }) => ({
+        .map(({ taux, abandonne, ...reste }) => ({
+          // Une tâche faite n'a pas le champ : il n'apparaît que pour une tâche abandonnée.
+          ...(abandonne ? { abandonne: true as const } : {}),
           ...reste,
           tauxBas: Math.min(...taux),
           tauxHaut: Math.max(...taux),

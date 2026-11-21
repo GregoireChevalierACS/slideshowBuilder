@@ -75,6 +75,14 @@ export interface DiapositiveGainsAttendus extends AvecNotes {
     readonly processus: string;
     readonly valeurGagneeParAn: Fourchette<Montant>;
   }[];
+  /** Les tâches abandonnées que l'automatisation remettrait en place, hors du gain. */
+  readonly travailRattrape: readonly {
+    readonly processus: string;
+    /** Le temps qu'il faudrait y passer chaque année. */
+    readonly tempsNecessaireParAn: Duree;
+    /** La part que l'automatisation en ferait. */
+    readonly tempsRattrapeParAn: Fourchette<Duree>;
+  }[];
 }
 
 /** Les façons d'héberger la solution, comparées en coût et en coût par heure récupérée. */

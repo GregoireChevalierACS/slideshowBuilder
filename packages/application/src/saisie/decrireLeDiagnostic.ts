@@ -47,6 +47,7 @@ const decrireLeProcessus = ({ processus, profil }: ProcessusDuDiagnostic): Saisi
   tauxBas: processus.tauxBas.valeur,
   tauxHaut: processus.tauxHaut.valeur,
   coutHoraire: decrireLeCoutHoraire(processus.coutHoraire),
+  ...(processus.abandonne ? { abandonne: true } : {}),
   profil: {
     nature: profil.nature,
     source: decrireLOutil(profil.source),

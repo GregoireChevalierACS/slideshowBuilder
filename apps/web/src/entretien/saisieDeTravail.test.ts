@@ -10,6 +10,7 @@ import {
   ajouterUneOption,
   ajouterUnProcessus,
   appliquerUnModele,
+  avecAbandon,
   enFrequenceReguliere,
   enFrequenceSaisonniere,
   nomLibre,
@@ -312,5 +313,15 @@ describe('options d’hébergement', () => {
     expect(nomsDesOptions(renommee)).toStrictEqual(['Au bureau', 'Cloud']);
     expect(nomsDesOptions(retirerLOption(renommee, 0))).toStrictEqual(['Cloud']);
     expect(retirerLOption(retirerLOption(renommee, 0), 0)).toStrictEqual(uneSaisieDeDiagnostic());
+  });
+});
+
+describe('tâche abandonnée', () => {
+  it('ne porte le champ que si elle n’est plus faite', () => {
+    const faite = uneSaisieDeProcessus();
+    const abandonnee = avecAbandon(faite, true);
+
+    expect(abandonnee).toStrictEqual({ ...faite, abandonne: true });
+    expect(avecAbandon(abandonnee, false)).toStrictEqual(faite);
   });
 });

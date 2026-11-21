@@ -11,6 +11,7 @@ export {
   type EstimationDeGains,
   type Fourchette,
   type GainDUnProcessus,
+  type GainsChiffres,
   type TotalDesGains,
 } from './gains/estimerGains.js';
 export {

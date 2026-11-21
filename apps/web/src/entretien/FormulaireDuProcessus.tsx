@@ -25,6 +25,7 @@ import {
 import {
   appliquerUnModele,
   enFrequenceReguliere,
+  avecAbandon,
   enFrequenceSaisonniere,
   outilsCites,
   reconcilierLesTaux,
@@ -288,6 +289,16 @@ export const FormulaireDuProcessus = ({
             changer({ ...processus, frequence });
           }}
         />
+        <label className="interrupteur">
+          <input
+            type="checkbox"
+            checked={processus.abandonne === true}
+            onChange={(evenement) => {
+              changer(avecAbandon(processus, evenement.target.checked));
+            }}
+          />
+          N’est plus faite aujourd’hui
+        </label>
       </Section>
 
       <Section titre="③ Avec quoi">

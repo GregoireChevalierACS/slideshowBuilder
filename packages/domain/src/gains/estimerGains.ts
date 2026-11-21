@@ -36,10 +36,20 @@ export interface AlerteDeCoherence {
   readonly heuresParPersonneParAn: number;
 }
 
-export interface EstimationDeGains {
-  readonly hypotheses: HypothesesDeCalcul;
+/** Des processus chiffrés ligne par ligne, et leur total. */
+export interface GainsChiffres {
   readonly parProcessus: readonly GainDUnProcessus[];
   readonly total: TotalDesGains;
+}
+
+export interface EstimationDeGains extends GainsChiffres {
+  readonly hypotheses: HypothesesDeCalcul;
+  /**
+   * Les tâches qui ne sont plus faites aujourd'hui, à part : elles ne coûtent rien aujourd'hui et
+   * n'entrent ni dans le coût caché ni dans le gain. Leur « temps actuel » est celui qu'il faudrait
+   * y passer, leur « temps gagné » la part que l'automatisation en ferait.
+   */
+  readonly travailRattrape: GainsChiffres;
   readonly alertes: readonly AlerteDeCoherence[];
 }
 
@@ -92,15 +102,13 @@ const arrondirColonne = <L, R>(
   );
 
 /**
- * Estime le temps et l'argent que l'automatisation ferait gagner chaque année.
- *
  * Tout est calculé sans arrondi, puis chaque colonne est arrondie une seule fois en conservant son
  * total : la somme des lignes affichées est toujours égale au total affiché.
  */
-export const estimerGains = (
+const chiffrer = (
   processus: readonly ProcessusRedondant[],
   hypotheses: HypothesesDeCalcul,
-): EstimationDeGains => {
+): GainsChiffres => {
   const lignes = processus.map((p) => ({ processus: p, exacte: valeursExactes(p, hypotheses) }));
 
   const avecTempsActuel = arrondirColonne(
@@ -171,7 +179,21 @@ export const estimerGains = (
     },
   };
 
-  const alertes = lignes.flatMap(({ processus: p, exacte }): AlerteDeCoherence[] => {
+  return { parProcessus, total };
+};
+
+/**
+ * Estime le temps et l'argent que l'automatisation ferait gagner chaque année sur les tâches faites
+ * aujourd'hui, et à part le travail qu'elle rattraperait sur les tâches abandonnées.
+ */
+export const estimerGains = (
+  processus: readonly ProcessusRedondant[],
+  hypotheses: HypothesesDeCalcul,
+): EstimationDeGains => {
+  const secondesTempsPlein = hypotheses.heuresAnnuellesTempsPlein * SECONDES_PAR_HEURE;
+  // Une fréquence saisie pour toute l'équipe se repère aussi sur une tâche abandonnée.
+  const alertes = processus.flatMap((p): AlerteDeCoherence[] => {
+    const exacte = valeursExactes(p, hypotheses);
     if (exacte.secondesParPersonne <= secondesTempsPlein) return [];
     return [
       {
@@ -182,5 +204,16 @@ export const estimerGains = (
     ];
   });
 
-  return { hypotheses, parProcessus, total, alertes };
+  return {
+    hypotheses,
+    ...chiffrer(
+      processus.filter((p) => !p.abandonne),
+      hypotheses,
+    ),
+    travailRattrape: chiffrer(
+      processus.filter((p) => p.abandonne),
+      hypotheses,
+    ),
+    alertes,
+  };
 };

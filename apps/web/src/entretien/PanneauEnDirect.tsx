@@ -22,26 +22,43 @@ const PanneauDuProcessus = ({
   }
   const { estimation, architecture } = seul.value;
   const { total } = estimation;
+  const rattrape = estimation.travailRattrape.total;
 
   return (
     <section aria-label="Ce processus">
       <h3>{processus.nom}</h3>
-      <p>
-        Aujourd’hui : <strong>{enHeures(total.tempsActuelParAn.enSecondes)}/an</strong>, soit{' '}
-        {enEuros(total.valeurActuelleParAn.enCentimes)} et{' '}
-        {enEtp(total.equivalentsTempsPleinActuels)}.
-      </p>
-      <p>
-        Gain :{' '}
-        <strong>
+      {processus.abandonne === true ? (
+        <p>
+          N’est plus faite aujourd’hui : il y faudrait{' '}
+          <strong>{enHeures(rattrape.tempsActuelParAn.enSecondes)}/an</strong>. L’automatiser en
+          rattrape{' '}
           {fourchette(
-            total.valeurGagneeParAn.bas.enCentimes,
-            total.valeurGagneeParAn.haut.enCentimes,
-            enEuros,
-          )}{' '}
-          par an
-        </strong>
-      </p>
+            rattrape.tempsGagneParAn.bas.enSecondes,
+            rattrape.tempsGagneParAn.haut.enSecondes,
+            enHeures,
+          )}
+          , hors gain.
+        </p>
+      ) : (
+        <>
+          <p>
+            Aujourd’hui : <strong>{enHeures(total.tempsActuelParAn.enSecondes)}/an</strong>, soit{' '}
+            {enEuros(total.valeurActuelleParAn.enCentimes)} et{' '}
+            {enEtp(total.equivalentsTempsPleinActuels)}.
+          </p>
+          <p>
+            Gain :{' '}
+            <strong>
+              {fourchette(
+                total.valeurGagneeParAn.bas.enCentimes,
+                total.valeurGagneeParAn.haut.enCentimes,
+                enEuros,
+              )}{' '}
+              par an
+            </strong>
+          </p>
+        </>
+      )}
       {/* Un seul processus : une seule solution. */}
       {architecture.solutions.map(({ nom, solution }) => (
         <p key={nom}>Niveau : {LIBELLES_DES_NIVEAUX[solution.niveau]}</p>
@@ -98,6 +115,17 @@ export const PanneauEnDirect = ({
             )}
             .
           </p>
+          {ensemble.value.estimation.travailRattrape.parProcessus.length > 0 && (
+            <p>
+              En plus, du travail rattrapé :{' '}
+              {fourchette(
+                ensemble.value.estimation.travailRattrape.total.tempsGagneParAn.bas.enSecondes,
+                ensemble.value.estimation.travailRattrape.total.tempsGagneParAn.haut.enSecondes,
+                enHeures,
+              )}{' '}
+              par an.
+            </p>
+          )}
         </section>
       )}
     </aside>

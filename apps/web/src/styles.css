@@ -680,6 +680,12 @@ label.interrupteur {
   font-weight: 600;
 }
 
+/* Le travail rattrapé, sous les barres des gains : à part, et plus discret que le gain. */
+.diapositive .travail-rattrape {
+  font-size: 1.6cqw;
+  color: #5f6368;
+}
+
 /* --- Diapositive « Deux façons de l'héberger » : une colonne par option --- */
 
 .options-d-hebergement {

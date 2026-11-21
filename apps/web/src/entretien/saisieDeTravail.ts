@@ -195,3 +195,34 @@ export const retirerLOption = (saisie: SaisieDeDiagnostic, position: number): Sa
     saisie,
     optionsDe(saisie).filter((_, i) => i !== position),
   );
+
+/**
+ * Une tâche abandonnée n'est plus faite aujourd'hui : elle sort du coût caché et du gain. Le champ
+ * n'apparaît que pour elle.
+ */
+export const avecAbandon = (
+  processus: SaisieDeProcessus,
+  abandonne: boolean,
+): SaisieDeProcessus => {
+  const {
+    nom,
+    dureeUnitaireEnSecondes,
+    frequence,
+    personnes,
+    tauxBas,
+    tauxHaut,
+    coutHoraire,
+    profil,
+  } = processus;
+  const fait = {
+    nom,
+    dureeUnitaireEnSecondes,
+    frequence,
+    personnes,
+    tauxBas,
+    tauxHaut,
+    coutHoraire,
+    profil,
+  };
+  return abandonne ? { ...fait, abandonne: true } : fait;
+};

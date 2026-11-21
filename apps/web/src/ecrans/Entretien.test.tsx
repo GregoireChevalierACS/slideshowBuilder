@@ -376,6 +376,27 @@ describe('Entretien', () => {
     });
   });
 
+  it('marque une tâche qui n’est plus faite : chiffrée à part, hors gain', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+
+    await userEvent.click(screen.getByLabelText('N’est plus faite aujourd’hui'));
+
+    // 608 h nécessaires par an, dont 70 à 90 % rattrapées : 425,6 h à 547,2 h.
+    const panneau = lisible(screen.getByRole('complementary', { name: 'En direct' }).textContent);
+    expect(panneau).toContain('N’est plus faite aujourd’hui : il y faudrait 608 h/an');
+    expect(panneau).toContain('rattrape 426 h à 547 h, hors gain');
+    expect(panneau).toContain('En plus, du travail rattrapé : 426 h à 547 h par an.');
+    await waitFor(() => {
+      expect(etat.saisie.processus[0]?.abandonne).toBe(true);
+    });
+
+    await userEvent.click(screen.getByLabelText('N’est plus faite aujourd’hui'));
+    await waitFor(() => {
+      expect(etat.saisie.processus[0]).not.toHaveProperty('abandonne');
+    });
+  });
+
   it('compare des options d’hébergement, chiffrées en direct', async () => {
     const { client, etat } = unFauxServeur();
     await afficher(client);

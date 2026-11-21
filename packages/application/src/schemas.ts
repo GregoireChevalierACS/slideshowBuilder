@@ -77,6 +77,7 @@ const schemaDeProcessus = z.strictObject({
   tauxBas: entier,
   tauxHaut: entier,
   coutHoraire: schemaDeCoutHoraire,
+  abandonne: z.literal(true).exactOptional(),
   profil: z.strictObject({
     nature: choixDuDomaine<NatureDeTache>()([
       'saisie',
@@ -147,15 +148,20 @@ export const schemaDeVersion = z.strictObject({
 /** Reconnaît un fichier exporté par cette application, quelle que soit la version de son format. */
 export const FORMAT_D_EXPORT = 'slideshow-builder/diagnostics';
 /**
- * 2 : fréquences saisonnières et semaines de pointe. 3 : options d'hébergement. Les fichiers des
- * versions précédentes restent lisibles.
+ * 2 : fréquences saisonnières et semaines de pointe. 3 : options d'hébergement. 4 : tâches
+ * abandonnées. Les fichiers des versions précédentes restent lisibles.
  */
-export const VERSION_DU_FORMAT_D_EXPORT = 3;
+export const VERSION_DU_FORMAT_D_EXPORT = 4;
 
 /** Un fichier d'export : l'historique complet de chaque diagnostic, version par version. */
 export const schemaDExport = z.strictObject({
   format: z.literal(FORMAT_D_EXPORT),
-  versionDuFormat: z.union([z.literal(1), z.literal(2), z.literal(VERSION_DU_FORMAT_D_EXPORT)]),
+  versionDuFormat: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(VERSION_DU_FORMAT_D_EXPORT),
+  ]),
   exporteLe: z.string(),
   diagnostics: z
     .array(

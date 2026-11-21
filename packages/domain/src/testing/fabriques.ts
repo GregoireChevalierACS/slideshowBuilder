@@ -55,6 +55,7 @@ export interface DescriptionDeProcessus {
   readonly tauxBas?: number;
   readonly tauxHaut?: number;
   readonly coutHoraire?: CoutHoraire;
+  readonly abandonne?: boolean;
 }
 
 /** Processus de référence : la saisie des factures fournisseurs (voir les scénarios). */
@@ -70,6 +71,7 @@ export const unProcessus = (description: DescriptionDeProcessus = {}): Processus
       tauxBas: unPourcentage(description.tauxBas ?? 70),
       tauxHaut: unPourcentage(description.tauxHaut ?? 90),
       coutHoraire: description.coutHoraire ?? CoutHoraire.direct(unMontant(3_500)),
+      abandonne: description.abandonne ?? false,
     }),
   );
 };
