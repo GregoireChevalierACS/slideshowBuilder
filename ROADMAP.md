@@ -74,4 +74,7 @@ Adaptation à un premier cas de terrain : un artisan dont l'activité se concent
 
 - Saisonnalité : voir [ADR 0012](docs/adr/0012-modele-de-calcul-saisonnier.md). Semaines de pointe dans les hypothèses, fréquence saisonnière (en saison, hors saison), fréquences à une décimale, format d'export 2.
 - La case « Activité saisonnière » a d'abord été placée avant la fréquence : le parcours E2E au clavier a montré qu'elle décalait toute la saisie courante. Elle est maintenant en fin de section.
+- Coût de la solution : voir [ADR 0013](docs/adr/0013-cout-de-la-solution.md). Options d'hébergement (3 au plus), coût sur 1 an et sur 3 ans, coût par heure récupérée, diapositive après les gains, format d'export 3.
+- Le contrôle de débordement a fixé les limites des options : 4 points de 80 caractères débordaient de 40 % ; 3 points de 40 caractères tiennent avec la réserve.
+- Le test de l'écran d'entretien a trouvé que la sauvegarde automatique n'envoyait que le prospect, les hypothèses et les processus : les options n'auraient jamais été enregistrées.
 - La mise à jour de Playwright par Dependabot demande `pnpm --filter @slideshow/web exec playwright install chromium` en local.
