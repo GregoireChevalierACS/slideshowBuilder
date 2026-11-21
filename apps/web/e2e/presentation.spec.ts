@@ -90,8 +90,12 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
  * hauteur du bas : les polices varient d'un système à l'autre (Windows, le Linux de la CI), une
  * diapositive trop juste sur une machine déborde sur une autre.
  */
-const diapositivesTropPleines = (page: Page) =>
-  page.locator('.impression .diapositive').evaluateAll((diapositives) =>
+const diapositivesTropPleines = async (page: Page) => {
+  // Mesurer avec la police embarquée, pas avec celle de remplacement affichée pendant son chargement.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  return page.locator('.impression .diapositive').evaluateAll((diapositives) =>
     diapositives.flatMap((d, numero) => {
       const deborde = (e: Element) =>
         e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1;
@@ -117,6 +121,7 @@ const diapositivesTropPleines = (page: Page) =>
         : [`${String(numero + 1)} (${d.getAttribute('class') ?? ''})`];
     }),
   );
+};
 
 test('un deck chargé se présente au clavier, de la première à la dernière diapositive', async ({
   page,

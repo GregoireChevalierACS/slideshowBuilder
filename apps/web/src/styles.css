@@ -9,7 +9,9 @@
   --alerte: #a8261b;
   --bordure: #d9d9d6;
   color-scheme: light;
+  /* Embarquée (ADR 0014) : les mesures de débordement valent sur toutes les machines. */
   font-family:
+    'Inter Variable',
     system-ui,
     -apple-system,
     'Segoe UI',
