@@ -29,6 +29,7 @@ export {
 export { decrireLeDiagnostic } from './saisie/decrireLeDiagnostic.js';
 export { lireLaSaisie, type ErreurDuDomaine, type SaisieInvalide } from './saisie/lireLaSaisie.js';
 export type * from './saisie/SaisieDeDiagnostic.js';
+export { MODELES_D_OPTIONS, type ModeleDOption } from './modeles/modelesDOptions.js';
 export {
   appliquerLeModele,
   MODELES_DE_PROCESSUS,

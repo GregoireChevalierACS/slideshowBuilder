@@ -9,6 +9,7 @@ import {
   HypothesesDeCalcul,
   Montant,
   ok,
+  OptionDeDeploiement,
   Outil,
   Pourcentage,
   ProcessusRedondant,
@@ -21,6 +22,7 @@ import {
   type FrequenceInvalide,
   type HypothesesInvalides,
   type MontantInvalide,
+  type OptionInvalide,
   type OutilInvalide,
   type PourcentageInvalide,
   type ProcessusDuDiagnostic,
@@ -32,6 +34,7 @@ import type {
   SaisieDeCoutHoraire,
   SaisieDeDiagnostic,
   SaisieDeProcessus,
+  SaisieDOption,
   SaisieDOutil,
 } from './SaisieDeDiagnostic.js';
 
@@ -44,6 +47,7 @@ export type ErreurDuDomaine =
   | FrequenceInvalide
   | HypothesesInvalides
   | MontantInvalide
+  | OptionInvalide
   | OutilInvalide
   | PourcentageInvalide
   | ProcessusInvalide
@@ -144,6 +148,50 @@ const lireLesProcessus = (
   return ok(lus);
 };
 
+const lireLOption = (saisie: SaisieDOption, position: number): Lecture<OptionDeDeploiement> => {
+  const champ = (nom: keyof SaisieDOption) => `options[${String(position)}].${nom}`;
+  const montant = (nom: keyof SaisieDOption, centimes: number) =>
+    au(champ(nom), Montant.depuisCentimes(centimes));
+
+  const miseEnPlace = montant('miseEnPlaceEnCentimes', saisie.miseEnPlaceEnCentimes);
+  if (!miseEnPlace.ok) return miseEnPlace;
+  const materiel = montant('materielEnCentimes', saisie.materielEnCentimes);
+  if (!materiel.ok) return materiel;
+  const bas = montant('fraisMensuelsBasEnCentimes', saisie.fraisMensuelsBasEnCentimes);
+  if (!bas.ok) return bas;
+  const haut = montant('fraisMensuelsHautEnCentimes', saisie.fraisMensuelsHautEnCentimes);
+  if (!haut.ok) return haut;
+
+  const option = OptionDeDeploiement.creer({
+    nom: saisie.nom,
+    miseEnPlace: miseEnPlace.value,
+    materiel: materiel.value,
+    fraisMensuels: { bas: bas.value, haut: haut.value },
+    inclus: saisie.inclus,
+    limites: saisie.limites,
+  });
+  if (option.ok) return option;
+  // Une erreur sur une liste désigne la liste en cause ; les autres, leur champ.
+  const { error } = option;
+  const fautif =
+    'liste' in error
+      ? error.liste
+      : error.kind === 'FraisMensuelsBasSuperieursAuxHauts'
+        ? 'fraisMensuelsBasEnCentimes'
+        : 'nom';
+  return au(champ(fautif), option);
+};
+
+const lireLesOptions = (saisies: readonly SaisieDOption[]): Lecture<OptionDeDeploiement[]> => {
+  const lues: OptionDeDeploiement[] = [];
+  for (const [position, saisie] of saisies.entries()) {
+    const option = lireLOption(saisie, position);
+    if (!option.ok) return option;
+    lues.push(option.value);
+  }
+  return ok(lues);
+};
+
 const lireLeProspect = (saisie: SaisieDeDiagnostic['prospect']): Lecture<Prospect> => {
   const { nom, secteur, effectifTotal } = saisie;
   const identite = secteur === undefined ? { nom } : { nom, secteur };
@@ -166,6 +214,8 @@ export const lireLaSaisie = (saisie: SaisieDeDiagnostic, version: number): Lectu
   if (!hypotheses.ok) return hypotheses;
   const processus = lireLesProcessus(saisie.processus);
   if (!processus.ok) return processus;
+  const options = lireLesOptions(saisie.options ?? []);
+  if (!options.ok) return options;
 
   const diagnostic = Diagnostic.restaurer(
     {
@@ -173,9 +223,16 @@ export const lireLaSaisie = (saisie: SaisieDeDiagnostic, version: number): Lectu
       dateDEntretien: dateDEntretien.value,
       hypotheses: hypotheses.value,
       processus: processus.value,
+      options: options.value,
     },
     version,
   );
   if (diagnostic.ok) return diagnostic;
-  return au(diagnostic.error.kind === 'VersionInvalide' ? 'version' : 'processus', diagnostic);
+  const champDuDiagnostic: Readonly<Record<DiagnosticInvalide['kind'], string>> = {
+    VersionInvalide: 'version',
+    NomDeProcessusEnDouble: 'processus',
+    NomDOptionEnDouble: 'options',
+    TropDOptions: 'options',
+  };
+  return au(champDuDiagnostic[diagnostic.error.kind], diagnostic);
 };

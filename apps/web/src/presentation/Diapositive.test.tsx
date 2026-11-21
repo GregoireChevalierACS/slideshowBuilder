@@ -1,4 +1,4 @@
-import { lireLaSaisie } from '@slideshow/application';
+import { lireLaSaisie, type SaisieDeProcessus, type SaisieDOption } from '@slideshow/application';
 import { uneSaisieDeDiagnostic, uneSaisieDeProcessus } from '@slideshow/application/testing';
 import { construireDeck, type Diapositive, type ParametresDuDeck } from '@slideshow/domain';
 import { render, screen, within } from '@testing-library/react';
@@ -211,5 +211,64 @@ describe('DiapositiveAffichee', () => {
       'FeuilleDeRoute',
     ]);
     expect(texte(page(pages, 'Titre'))).toContain('Négoce Durand');
+  });
+});
+
+describe('DiapositiveAffichee : options d’hébergement', () => {
+  const uneOption = (nom: string, surcharges: Partial<SaisieDOption> = {}): SaisieDOption => ({
+    nom,
+    miseEnPlaceEnCentimes: 200_000,
+    materielEnCentimes: 80_000,
+    fraisMensuelsBasEnCentimes: 3_000,
+    fraisMensuelsHautEnCentimes: 5_000,
+    inclus: ['Serveur dans vos locaux'],
+    limites: ['Dépend de votre connexion'],
+    ...surcharges,
+  });
+
+  const options = (
+    liste: readonly SaisieDOption[],
+    processus: Partial<SaisieDeProcessus> = {},
+  ): Page => {
+    const lu = lireLaSaisie(
+      uneSaisieDeDiagnostic({ processus: [uneSaisieDeProcessus(processus)], options: liste }),
+      1,
+    );
+    if (!lu.ok) throw new Error('saisie de test invalide');
+    return page(
+      pagesDuDeck(construireDeck(lu.value, { public: 'dirigeant', duree: 'courte' })),
+      'Options',
+    );
+  };
+
+  it('compare chaque option en coût par heure récupérée, sur 3 ans et la première année', () => {
+    // 608 h/an à 70-90 % : 425,6 à 547,2 h gagnées par an, 1 276,8 à 1 641,6 h sur 3 ans.
+    // 3 880 € / 1 641,6 h = 2,36 €/h ; 4 600 € / 1 276,8 h = 3,60 €/h.
+    const contenu = texte(options([uneOption('Au bureau'), uneOption('Dans le cloud')]));
+
+    expect(contenu).toContain('Deux façons de l’héberger');
+    expect(contenu).toContain('Pour 426 h à 547 h gagnées par an, comparées sur 3 ans');
+    expect(contenu).toContain('Au bureau2,36 €/h à 3,60 €/hpar heure récupérée');
+    expect(contenu).toContain('Sur 3 ans3 880 € à 4 600 €La première année3 160 € à 3 400 €');
+    expect(contenu).toContain('Serveur dans vos locauxDépend de votre connexion');
+  });
+
+  it.each([
+    [1, 'Comment l’héberger'],
+    [3, 'Trois façons de l’héberger'],
+  ])('s’intitule selon le nombre d’options : %i', (nombre, titre) => {
+    const liste = ['A', 'B', 'C'].slice(0, nombre).map((nom) => uneOption(nom));
+
+    expect(texte(options(liste))).toContain(titre);
+  });
+
+  it('borne le coût par heure quand l’hypothèse prudente ne gagne aucune heure', () => {
+    expect(texte(options([uneOption('A')], { tauxBas: 0 }))).toContain('dès 2,36 €/h');
+  });
+
+  it('le dit quand aucune heure n’est gagnée', () => {
+    expect(texte(options([uneOption('A')], { tauxBas: 0, tauxHaut: 0 }))).toContain(
+      'aucune heure gagnée',
+    );
   });
 });

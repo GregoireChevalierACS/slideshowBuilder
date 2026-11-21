@@ -13,7 +13,10 @@ const NATURES = [
   'reporting',
 ] as const;
 
-/** Un diagnostic volontairement chargé : 12 processus aux noms longs, IA, documents, une alerte. */
+/**
+ * Un diagnostic volontairement chargé : 12 processus aux noms longs, IA, documents, une alerte, et
+ * 3 options d'hébergement aux noms et aux points aussi longs que le domaine le permet.
+ */
 const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<string> => {
   const ouverture = await requete.post('/api/diagnostics', {
     data: {
@@ -53,6 +56,29 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
       prospect: { nom: 'Société de négoce de matériaux Durand et fils' },
       hypotheses: { joursTravaillesParAn: 228, heuresAnnuellesTempsPlein: 1_607 },
       processus,
+      // Noms et points aussi nombreux et aussi longs que le domaine le permet (40 caractères).
+      options: [
+        'Au bureau, sur un mini-serveur à vous',
+        'Dans le cloud, chez un hébergeur choisi',
+        'Offre type agence (audit + abonnement)',
+      ].map((nom, i) => ({
+        nom,
+        miseEnPlaceEnCentimes: 250_000 + 100_000 * i,
+        materielEnCentimes: i === 0 ? 120_000 : 0,
+        fraisMensuelsBasEnCentimes: 4_500 + 5_000 * i,
+        fraisMensuelsHautEnCentimes: 9_000 + 10_000 * i,
+        // De vraies phrases, jusqu'à 40 caractères : une largeur de lettres réaliste.
+        inclus: [
+          'Maintenance, mises à jour et sauvegardes',
+          'Assistance par téléphone et par e-mail',
+          'Formation de l’équipe au nouvel outil',
+        ],
+        limites: [
+          'Dépend de la connexion internet du site',
+          'Matériel à renouveler tous les cinq ans',
+          'Mise en service sous trois à quatre mois',
+        ],
+      })),
     },
   });
   expect(revision.ok()).toBe(true);
@@ -64,8 +90,12 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
  * hauteur du bas : les polices varient d'un système à l'autre (Windows, le Linux de la CI), une
  * diapositive trop juste sur une machine déborde sur une autre.
  */
-const diapositivesTropPleines = (page: Page) =>
-  page.locator('.impression .diapositive').evaluateAll((diapositives) =>
+const diapositivesTropPleines = async (page: Page) => {
+  // Mesurer avec la police embarquée, pas avec celle de remplacement affichée pendant son chargement.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  return page.locator('.impression .diapositive').evaluateAll((diapositives) =>
     diapositives.flatMap((d, numero) => {
       const deborde = (e: Element) =>
         e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1;
@@ -91,6 +121,7 @@ const diapositivesTropPleines = (page: Page) =>
         : [`${String(numero + 1)} (${d.getAttribute('class') ?? ''})`];
     }),
   );
+};
 
 test('un deck chargé se présente au clavier, de la première à la dernière diapositive', async ({
   page,

@@ -7,6 +7,8 @@ import type { ProfilDAutomatisation } from '../conception/ProfilDAutomatisation.
 import { estimerGains, type EstimationDeGains } from '../gains/estimerGains.js';
 import type { HypothesesDeCalcul } from '../gains/HypothesesDeCalcul.js';
 import type { ProcessusRedondant } from '../gains/ProcessusRedondant.js';
+import { chiffrerLesOptions, type CoutDUneOption } from '../solution/chiffrerLesOptions.js';
+import type { OptionDeDeploiement } from '../solution/OptionDeDeploiement.js';
 import type { DateLocale } from './DateLocale.js';
 import type { Prospect } from './Prospect.js';
 
@@ -18,27 +20,32 @@ export interface ProcessusDuDiagnostic {
 
 export type DiagnosticInvalide =
   | { readonly kind: 'NomDeProcessusEnDouble'; readonly nom: string }
-  | { readonly kind: 'VersionInvalide'; readonly valeur: number };
+  | { readonly kind: 'VersionInvalide'; readonly valeur: number }
+  | { readonly kind: 'NomDOptionEnDouble'; readonly nom: string }
+  /** La diapositive de comparaison tient en trois colonnes. */
+  | { readonly kind: 'TropDOptions'; readonly maximum: number };
+
+export const OPTIONS_PAR_DIAGNOSTIC = 3;
 
 export interface ContenuDuDiagnostic {
   readonly prospect: Prospect;
   readonly dateDEntretien: DateLocale;
   readonly hypotheses: HypothesesDeCalcul;
   readonly processus: readonly ProcessusDuDiagnostic[];
+  /** Les façons d'héberger la solution, à comparer. Aucune par défaut. */
+  readonly options?: readonly OptionDeDeploiement[];
 }
 
 /** Les noms servent de repères dans l'architecture : deux processus ne peuvent pas se confondre. */
-const premierDoublon = (processus: readonly ProcessusDuDiagnostic[]): string | undefined => {
+const premierDoublon = (noms: readonly string[]): string | undefined => {
   const vus = new Set<string>();
-  return processus
-    .map(({ processus: p }) => p.nom)
-    .find((nom) => {
-      // Stryker disable next-line MethodExpression: mutant équivalent, passer en majuscules ou en minuscules donne la même comparaison insensible à la casse.
-      const cle = nom.toLocaleLowerCase('fr');
-      const dejaVu = vus.has(cle);
-      vus.add(cle);
-      return dejaVu;
-    });
+  return noms.find((nom) => {
+    // Stryker disable next-line MethodExpression: mutant équivalent, passer en majuscules ou en minuscules donne la même comparaison insensible à la casse.
+    const cle = nom.toLocaleLowerCase('fr');
+    const dejaVu = vus.has(cle);
+    vus.add(cle);
+    return dejaVu;
+  });
 };
 
 /**
@@ -50,6 +57,7 @@ export class Diagnostic implements ContenuDuDiagnostic {
   readonly dateDEntretien: DateLocale;
   readonly hypotheses: HypothesesDeCalcul;
   readonly processus: readonly ProcessusDuDiagnostic[];
+  readonly options: readonly OptionDeDeploiement[];
 
   private constructor(
     contenu: ContenuDuDiagnostic,
@@ -59,6 +67,7 @@ export class Diagnostic implements ContenuDuDiagnostic {
     this.dateDEntretien = contenu.dateDEntretien;
     this.hypotheses = contenu.hypotheses;
     this.processus = contenu.processus;
+    this.options = contenu.options ?? [];
   }
 
   static creer(contenu: ContenuDuDiagnostic): Result<Diagnostic, DiagnosticInvalide> {
@@ -80,8 +89,16 @@ export class Diagnostic implements ContenuDuDiagnostic {
     contenu: ContenuDuDiagnostic,
     version: number,
   ): Result<Diagnostic, DiagnosticInvalide> {
-    const doublon = premierDoublon(contenu.processus);
+    const doublon = premierDoublon(contenu.processus.map(({ processus }) => processus.nom));
     if (doublon !== undefined) return err({ kind: 'NomDeProcessusEnDouble', nom: doublon });
+    const options = contenu.options ?? [];
+    if (options.length > OPTIONS_PAR_DIAGNOSTIC) {
+      return err({ kind: 'TropDOptions', maximum: OPTIONS_PAR_DIAGNOSTIC });
+    }
+    const optionEnDouble = premierDoublon(options.map((o) => o.nom));
+    if (optionEnDouble !== undefined) {
+      return err({ kind: 'NomDOptionEnDouble', nom: optionEnDouble });
+    }
     return ok(new Diagnostic(contenu, version));
   }
 
@@ -105,12 +122,18 @@ export class Diagnostic implements ContenuDuDiagnostic {
     );
   }
 
+  /** Chaque option chiffrée face au temps gagné par an. */
+  get coutDesOptions(): CoutDUneOption[] {
+    return chiffrerLesOptions(this.options, this.estimation.total.tempsGagneParAn);
+  }
+
   private contenu(): ContenuDuDiagnostic {
     return {
       prospect: this.prospect,
       dateDEntretien: this.dateDEntretien,
       hypotheses: this.hypotheses,
       processus: this.processus,
+      options: this.options,
     };
   }
 }

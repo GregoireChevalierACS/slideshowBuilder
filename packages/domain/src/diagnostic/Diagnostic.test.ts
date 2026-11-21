@@ -2,7 +2,8 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { concevoirArchitecture } from '../conception/concevoirArchitecture.js';
 import { estimerGains } from '../gains/estimerGains.js';
-import { desHypotheses, unProcessus, unProfil, valeurDe } from '../testing/fabriques.js';
+import { chiffrerLesOptions } from '../solution/chiffrerLesOptions.js';
+import { desHypotheses, uneOption, unProcessus, unProfil, valeurDe } from '../testing/fabriques.js';
 import { DateLocale } from './DateLocale.js';
 import { Diagnostic, type ProcessusDuDiagnostic } from './Diagnostic.js';
 import { Prospect } from './Prospect.js';
@@ -166,6 +167,49 @@ describe('Diagnostic', () => {
           { nom: 'Tri', profil: unProfil({ nature: 'tri' }) },
         ]),
       );
+    });
+  });
+
+  describe('options d’hébergement', () => {
+    const avecDesOptions = (options: readonly ReturnType<typeof uneOption>[]) =>
+      Diagnostic.creer({
+        prospect: unProspect(),
+        dateDEntretien: leVingtSixOctobre(),
+        hypotheses: desHypotheses(),
+        processus: [un('Relances')],
+        options,
+      });
+
+    it('n’en a aucune par défaut', () => {
+      expect(unDiagnostic().options).toStrictEqual([]);
+      expect(unDiagnostic().coutDesOptions).toStrictEqual([]);
+    });
+
+    it('en compare trois au plus', () => {
+      const trois = ['Au bureau', 'Dans le cloud', 'Offre type agence'].map((nom) =>
+        uneOption({ nom }),
+      );
+
+      expect(avecDesOptions(trois).ok).toBe(true);
+      expect(avecDesOptions([...trois, uneOption({ nom: 'Quatrième' })])).toStrictEqual({
+        ok: false,
+        error: { kind: 'TropDOptions', maximum: 3 },
+      });
+    });
+
+    it('refuse deux options du même nom, sans tenir compte de la casse', () => {
+      expect(
+        avecDesOptions([uneOption({ nom: 'Cloud' }), uneOption({ nom: 'CLOUD' })]),
+      ).toStrictEqual({ ok: false, error: { kind: 'NomDOptionEnDouble', nom: 'CLOUD' } });
+    });
+
+    it('chiffre ses options face au temps gagné par an, et les garde à la révision', () => {
+      const diagnostic = valeurDe(avecDesOptions([uneOption()]));
+
+      expect(diagnostic.coutDesOptions).toStrictEqual(
+        chiffrerLesOptions(diagnostic.options, diagnostic.estimation.total.tempsGagneParAn),
+      );
+      expect(valeurDe(diagnostic.reviser({})).options).toStrictEqual(diagnostic.options);
     });
   });
 });

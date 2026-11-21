@@ -2,12 +2,13 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
   unDiagnostic,
+  uneOption,
   unOutil,
   unProcessusDuDiagnostic,
   unEffectif,
   valeurDe,
 } from '../testing/fabriques.js';
-import { construireDeck } from './construireDeck.js';
+import { construireDeck, NOTE_DU_COUT_PAR_HEURE } from './construireDeck.js';
 import type {
   Diapositive,
   DureeDePresentation,
@@ -43,7 +44,50 @@ const complet = (publicVise: PublicVise): ParametresDuDeck => ({
   duree: 'complete',
 });
 
+/** Les mêmes processus, avec deux façons de les héberger à comparer. */
+const avecDesOptions = () =>
+  unDiagnostic(deuxProcessus().processus, { nom: 'Négoce Durand' }, [
+    uneOption({ nom: 'Au bureau' }),
+    uneOption({ nom: 'Dans le cloud', materiel: 0, fraisMensuels: [80, 120] }),
+  ]);
+
 describe('construireDeck', () => {
+  describe('options d’hébergement', () => {
+    it.each([
+      ['dirigeant', 'courte'],
+      ['dirigeant', 'complete'],
+      ['technique', 'courte'],
+      ['technique', 'complete'],
+    ] as const)('les compare juste après les gains (%s, %s)', (publicVise, duree) => {
+      const deck = genres(construireDeck(avecDesOptions(), { public: publicVise, duree }));
+
+      expect(deck[deck.indexOf('GainsAttendus') + 1]).toBe('Options');
+      expect(deck.filter((g) => g === 'Options')).toHaveLength(1);
+    });
+
+    it('n’ont pas de diapositive quand aucune n’est saisie', () => {
+      expect(genres(construireDeck(deuxProcessus(), complet('technique')))).not.toContain(
+        'Options',
+      );
+    });
+
+    it('sont chiffrées face au temps gagné, avec la méthode dans les notes du présentateur', () => {
+      const diagnostic = avecDesOptions();
+      const options = diapositive(construireDeck(diagnostic, complet('dirigeant')), 'Options');
+
+      expect(options).toStrictEqual({
+        kind: 'Options',
+        tempsGagneParAn: diagnostic.estimation.total.tempsGagneParAn,
+        options: diagnostic.coutDesOptions,
+        notes: [NOTE_DU_COUT_PAR_HEURE],
+      });
+      // La note explique la formule : de quoi répondre à « d'où vient ce chiffre ? ».
+      expect(NOTE_DU_COUT_PAR_HEURE).toContain(
+        '(mise en place + matériel + 36 mois de frais) ÷ heures gagnées sur 3 ans',
+      );
+    });
+  });
+
   describe('sélection et ordre des diapositives', () => {
     it('version complète pour un public technique : une diapositive par processus', () => {
       expect(genres(construireDeck(deuxProcessus(), complet('technique')))).toStrictEqual([
@@ -272,12 +316,13 @@ describe('construireDeck', () => {
         duree: fc.constantFrom<DureeDePresentation>('courte', 'complete'),
       });
 
-    it('même diagnostic et mêmes paramètres : même deck', () => {
+    it('même diagnostic, mêmes options et mêmes paramètres : même deck', () => {
       fc.assert(
-        fc.property(parametres(), (p) => {
+        fc.property(parametres(), fc.boolean(), (p, options) => {
+          const diagnostic = options ? avecDesOptions : deuxProcessus;
           return (
-            JSON.stringify(construireDeck(deuxProcessus(), p)) ===
-            JSON.stringify(construireDeck(deuxProcessus(), p))
+            JSON.stringify(construireDeck(diagnostic(), p)) ===
+            JSON.stringify(construireDeck(diagnostic(), p))
           );
         }),
       );

@@ -6,9 +6,11 @@
 // est égale au temps en secondes.
 
 import { describe, expect, it } from 'vitest';
+import { chiffrerLesOptions } from '../solution/chiffrerLesOptions.js';
 import {
   desHypotheses,
   uneFrequenceSaisonniere,
+  uneOption,
   unMontant,
   unProcessus,
 } from '../testing/fabriques.js';
@@ -253,6 +255,40 @@ describe('Scénarios de référence', () => {
 
     it('vaut 17 281,80 € par an aujourd’hui (1 s = 1 centime à 36 €/h)', () => {
       expect(estimation().total.valeurActuelleParAn.enCentimes).toBe(1_728_180);
+    });
+
+    it('compare deux hébergements en coût par heure récupérée sur 3 ans', () => {
+      // Gain sur 3 ans : 3 × 623 118 s = 519,3 h à 3 × 952 641 s = 793,9 h.
+      // Au bureau : 2 000 + 800 + 36 × 30 = 3 880 € à 2 000 + 800 + 36 × 50 = 4 600 €,
+      //   soit 3 880 / 793,9 = 4,89 €/h à 4 600 / 519,3 = 8,86 €/h.
+      // Dans le cloud : 1 500 + 36 × 80 = 4 380 € à 1 500 + 36 × 120 = 5 820 €,
+      //   soit 4 380 / 793,9 = 5,52 €/h à 5 820 / 519,3 = 11,21 €/h.
+      const [auBureau, dansLeCloud] = chiffrerLesOptions(
+        [
+          uneOption({
+            nom: 'Au bureau',
+            miseEnPlace: 2_000,
+            materiel: 800,
+            fraisMensuels: [30, 50],
+          }),
+          uneOption({
+            nom: 'Dans le cloud',
+            miseEnPlace: 1_500,
+            materiel: 0,
+            fraisMensuels: [80, 120],
+          }),
+        ],
+        estimation().total.tempsGagneParAn,
+      );
+
+      expect(auBureau?.coutParHeureRecuperee).toMatchObject({
+        bas: { enCentimes: 489 },
+        haut: { enCentimes: 886 },
+      });
+      expect(dansLeCloud?.coutParHeureRecuperee).toMatchObject({
+        bas: { enCentimes: 552 },
+        haut: { enCentimes: 1_121 },
+      });
     });
 
     it('donne les mêmes totaux que deux lignes régulières par processus, en saison et hors saison', () => {

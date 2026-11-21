@@ -64,6 +64,57 @@ export const ChampNumerique = ({
   );
 };
 
+/** Une ligne par point ; les lignes vides ne comptent pas. */
+export const enPoints = (texte: string): string[] =>
+  texte
+    .split('\n')
+    .map((ligne) => ligne.trim())
+    .filter((ligne) => ligne !== '');
+
+/**
+ * Une liste courte saisie une ligne par point. Comme le champ numérique, il garde le texte tapé
+ * (une ligne vide en cours de frappe) et ne se resynchronise que si la liste change d'ailleurs.
+ */
+export const ChampDeListe = ({
+  libelle,
+  valeur,
+  modifier,
+  erreur,
+}: {
+  readonly libelle: string;
+  readonly valeur: readonly string[];
+  readonly modifier: (valeur: string[]) => void;
+  readonly erreur?: string | undefined;
+}) => {
+  const id = useId();
+  const [texte, setTexte] = useState(() => valeur.join('\n'));
+  const [valeurAffichee, setValeurAffichee] = useState(valeur);
+  if (valeur.join('\n') !== valeurAffichee.join('\n')) {
+    setValeurAffichee(valeur);
+    setTexte(valeur.join('\n'));
+  }
+
+  return (
+    <div className="champ">
+      <label htmlFor={`${id}-champ`}>{libelle}</label>
+      <textarea
+        id={`${id}-champ`}
+        rows={4}
+        value={texte}
+        aria-invalid={erreur !== undefined}
+        aria-describedby={erreur === undefined ? undefined : id}
+        onChange={(evenement) => {
+          setTexte(evenement.target.value);
+          const points = enPoints(evenement.target.value);
+          setValeurAffichee(points);
+          modifier(points);
+        }}
+      />
+      <Erreur id={id} message={erreur} />
+    </div>
+  );
+};
+
 export const ChampTexte = ({
   libelle,
   valeur,

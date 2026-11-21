@@ -23,7 +23,7 @@ import { creerLApplication } from './creerLApplication.js';
 
 const unExportVide = () => ({
   format: 'slideshow-builder/diagnostics',
-  versionDuFormat: 2,
+  versionDuFormat: 3,
   exporteLe: '2026-10-27',
   diagnostics: [],
 });
@@ -248,6 +248,34 @@ describe('API HTTP', () => {
         version: 2,
         saisie: { processus: [{ nom: 'Saisie des factures fournisseurs' }] },
       });
+    });
+
+    it('enregistre les options d’hébergement, relues et comparées dans le deck', async () => {
+      const app = uneApplication();
+      await ouvrir(app);
+      const option = {
+        nom: 'Au bureau',
+        miseEnPlaceEnCentimes: 200_000,
+        materielEnCentimes: 80_000,
+        fraisMensuelsBasEnCentimes: 3_000,
+        fraisMensuelsHautEnCentimes: 5_000,
+        inclus: ['Serveur dans vos locaux'],
+        limites: [],
+      };
+
+      await app.inject({
+        method: 'PUT',
+        url: '/api/diagnostics/diagnostic-1',
+        payload: revision(1, { options: [option] }),
+      });
+      const relu = await app.inject({ method: 'GET', url: '/api/diagnostics/diagnostic-1' });
+      const deck = await app.inject({
+        method: 'GET',
+        url: '/api/diagnostics/diagnostic-1/deck?public=dirigeant&duree=courte',
+      });
+
+      expect(corps(relu)).toMatchObject({ version: 2, saisie: { options: [option] } });
+      expect(diapositives(deck).map((d) => d.kind)).toContain('Options');
     });
 
     it('refuse une révision d’une version périmée : 409, avec la version actuelle', async () => {
@@ -530,7 +558,7 @@ describe('export et import', () => {
 
   it.each([
     ['un autre JSON', { nom: 'x' }, 'n’est pas un export'],
-    ['un format plus récent', { ...unExportVide(), versionDuFormat: 3 }, 'version plus récente'],
+    ['un format plus récent', { ...unExportVide(), versionDuFormat: 4 }, 'version plus récente'],
     [
       'une structure modifiée',
       { ...unExportVide(), diagnostics: [{ id: 'a' }] },

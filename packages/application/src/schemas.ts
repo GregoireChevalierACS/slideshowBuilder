@@ -97,6 +97,17 @@ const schemaDeProcessus = z.strictObject({
   }),
 });
 
+const schemaDOption = z.strictObject({
+  nom: texte,
+  miseEnPlaceEnCentimes: entier,
+  materielEnCentimes: entier,
+  fraisMensuelsBasEnCentimes: entier,
+  fraisMensuelsHautEnCentimes: entier,
+  // Le domaine limite le nombre et la longueur des points ; ici, seulement une borne de sécurité.
+  inclus: z.array(texte).max(20),
+  limites: z.array(texte).max(20),
+});
+
 export const schemaDeProspect = z.strictObject({
   nom: texte,
   secteur: texte.exactOptional(),
@@ -111,6 +122,7 @@ export const schemaDesModifications = z.strictObject({
     semainesDePointe: entier.exactOptional(),
   }),
   processus: z.array(schemaDeProcessus).max(100),
+  options: z.array(schemaDOption).max(10).exactOptional(),
 });
 
 export const schemaDeSaisieDeDiagnostic = schemaDesModifications.extend({
@@ -134,13 +146,16 @@ export const schemaDeVersion = z.strictObject({
 
 /** Reconnaît un fichier exporté par cette application, quelle que soit la version de son format. */
 export const FORMAT_D_EXPORT = 'slideshow-builder/diagnostics';
-/** 2 : fréquences saisonnières et semaines de pointe. Les fichiers en version 1 restent lisibles. */
-export const VERSION_DU_FORMAT_D_EXPORT = 2;
+/**
+ * 2 : fréquences saisonnières et semaines de pointe. 3 : options d'hébergement. Les fichiers des
+ * versions précédentes restent lisibles.
+ */
+export const VERSION_DU_FORMAT_D_EXPORT = 3;
 
 /** Un fichier d'export : l'historique complet de chaque diagnostic, version par version. */
 export const schemaDExport = z.strictObject({
   format: z.literal(FORMAT_D_EXPORT),
-  versionDuFormat: z.union([z.literal(1), z.literal(VERSION_DU_FORMAT_D_EXPORT)]),
+  versionDuFormat: z.union([z.literal(1), z.literal(2), z.literal(VERSION_DU_FORMAT_D_EXPORT)]),
   exporteLe: z.string(),
   diagnostics: z
     .array(
