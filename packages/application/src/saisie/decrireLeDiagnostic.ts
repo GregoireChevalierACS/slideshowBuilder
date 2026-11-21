@@ -2,6 +2,7 @@ import type {
   CoutHoraire,
   Diagnostic,
   Frequence,
+  OptionDeDeploiement,
   Outil,
   ProcessusDuDiagnostic,
 } from '@slideshow/domain';
@@ -10,6 +11,7 @@ import type {
   SaisieDeDiagnostic,
   SaisieDeFrequence,
   SaisieDeProcessus,
+  SaisieDOption,
   SaisieDOutil,
 } from './SaisieDeDiagnostic.js';
 
@@ -54,6 +56,16 @@ const decrireLeProcessus = ({ processus, profil }: ProcessusDuDiagnostic): Saisi
   },
 });
 
+const decrireLOption = (option: OptionDeDeploiement): SaisieDOption => ({
+  nom: option.nom,
+  miseEnPlaceEnCentimes: option.miseEnPlace.enCentimes,
+  materielEnCentimes: option.materiel.enCentimes,
+  fraisMensuelsBasEnCentimes: option.fraisMensuels.bas.enCentimes,
+  fraisMensuelsHautEnCentimes: option.fraisMensuels.haut.enCentimes,
+  inclus: option.inclus,
+  limites: option.limites,
+});
+
 /** L'inverse de `lireLaSaisie` : décrire un diagnostic lu redonne exactement sa saisie. */
 export const decrireLeDiagnostic = (diagnostic: Diagnostic): SaisieDeDiagnostic => {
   const { nom, secteur, effectifTotal } = diagnostic.prospect;
@@ -74,5 +86,7 @@ export const decrireLeDiagnostic = (diagnostic: Diagnostic): SaisieDeDiagnostic 
         : { semainesDePointe: diagnostic.hypotheses.semainesDePointe }),
     },
     processus: diagnostic.processus.map(decrireLeProcessus),
+    // Sans option, le champ reste absent : les saisies d'avant les options sont inchangées.
+    ...(diagnostic.options.length === 0 ? {} : { options: diagnostic.options.map(decrireLOption) }),
   };
 };

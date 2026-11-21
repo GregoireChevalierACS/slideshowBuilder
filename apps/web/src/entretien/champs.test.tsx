@@ -2,7 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { ChampDeChoix, ChampNumerique, ChampTexte, lireUnNombre, Section } from './champs.js';
+import {
+  ChampDeChoix,
+  ChampDeListe,
+  ChampNumerique,
+  ChampTexte,
+  enPoints,
+  lireUnNombre,
+  Section,
+} from './champs.js';
 
 describe('lireUnNombre', () => {
   it.each([
@@ -156,5 +164,66 @@ describe('ChampDeChoix et Section', () => {
 
     expect(modifier).toHaveBeenCalledWith('documents');
     expect(screen.getByRole('group', { name: 'Comment' })).toBeInTheDocument();
+  });
+});
+
+describe('enPoints', () => {
+  it('lit un point par ligne, sans les lignes vides ni les espaces autour', () => {
+    expect(enPoints(' Sauvegardes \n\n  Maintenance\n')).toStrictEqual([
+      'Sauvegardes',
+      'Maintenance',
+    ]);
+  });
+});
+
+describe('ChampDeListe', () => {
+  const Controle = ({ surChangement }: { surChangement: (v: string[]) => void }) => {
+    const [valeur, setValeur] = useState<readonly string[]>(['Sauvegardes']);
+    return (
+      <>
+        <ChampDeListe
+          libelle="Inclus"
+          valeur={valeur}
+          modifier={(v) => {
+            setValeur(v);
+            surChangement(v);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setValeur(['Remplacé ailleurs']);
+          }}
+        >
+          Remplacer
+        </button>
+      </>
+    );
+  };
+
+  it('garde la ligne vide en cours de frappe, et transmet les points', async () => {
+    const surChangement = vi.fn();
+    render(<Controle surChangement={surChangement} />);
+
+    await userEvent.type(screen.getByLabelText('Inclus'), '{Enter}');
+    expect(screen.getByLabelText('Inclus')).toHaveValue('Sauvegardes\n');
+    await userEvent.type(screen.getByLabelText('Inclus'), 'Maintenance');
+
+    expect(surChangement).toHaveBeenLastCalledWith(['Sauvegardes', 'Maintenance']);
+  });
+
+  it('affiche une liste changée ailleurs', async () => {
+    render(<Controle surChangement={vi.fn()} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remplacer' }));
+
+    expect(screen.getByLabelText('Inclus')).toHaveValue('Remplacé ailleurs');
+  });
+
+  it('relie son erreur au champ', () => {
+    render(<ChampDeListe libelle="Limites" valeur={[]} modifier={vi.fn()} erreur="Trop long" />);
+
+    expect(screen.getByLabelText('Limites')).toHaveAccessibleDescription('Trop long');
+    expect(screen.getByLabelText('Limites')).toHaveAttribute('aria-invalid', 'true');
   });
 });

@@ -53,6 +53,17 @@ export interface SaisieDeProcessus {
   };
 }
 
+/** Une façon d'héberger la solution. Montants en centimes, comme partout dans la saisie. */
+export interface SaisieDOption {
+  readonly nom: string;
+  readonly miseEnPlaceEnCentimes: number;
+  readonly materielEnCentimes: number;
+  readonly fraisMensuelsBasEnCentimes: number;
+  readonly fraisMensuelsHautEnCentimes: number;
+  readonly inclus: readonly string[];
+  readonly limites: readonly string[];
+}
+
 export interface SaisieDeDiagnostic {
   readonly prospect: {
     readonly nom: string;
@@ -68,4 +79,6 @@ export interface SaisieDeDiagnostic {
     readonly semainesDePointe?: number;
   };
   readonly processus: readonly SaisieDeProcessus[];
+  /** Absent quand aucune option n'est à comparer. */
+  readonly options?: readonly SaisieDOption[];
 }

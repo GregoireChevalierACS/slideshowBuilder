@@ -13,7 +13,10 @@ const NATURES = [
   'reporting',
 ] as const;
 
-/** Un diagnostic volontairement chargé : 12 processus aux noms longs, IA, documents, une alerte. */
+/**
+ * Un diagnostic volontairement chargé : 12 processus aux noms longs, IA, documents, une alerte, et
+ * 3 options d'hébergement aux noms et aux points aussi longs que le domaine le permet.
+ */
 const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<string> => {
   const ouverture = await requete.post('/api/diagnostics', {
     data: {
@@ -53,6 +56,29 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
       prospect: { nom: 'Société de négoce de matériaux Durand et fils' },
       hypotheses: { joursTravaillesParAn: 228, heuresAnnuellesTempsPlein: 1_607 },
       processus,
+      // Noms et points aussi nombreux et aussi longs que le domaine le permet (40 caractères).
+      options: [
+        'Au bureau, sur un mini-serveur à vous',
+        'Dans le cloud, chez un hébergeur choisi',
+        'Offre type agence (audit + abonnement)',
+      ].map((nom, i) => ({
+        nom,
+        miseEnPlaceEnCentimes: 250_000 + 100_000 * i,
+        materielEnCentimes: i === 0 ? 120_000 : 0,
+        fraisMensuelsBasEnCentimes: 4_500 + 5_000 * i,
+        fraisMensuelsHautEnCentimes: 9_000 + 10_000 * i,
+        // De vraies phrases, jusqu'à 40 caractères : une largeur de lettres réaliste.
+        inclus: [
+          'Maintenance, mises à jour et sauvegardes',
+          'Assistance par téléphone et par e-mail',
+          'Formation de l’équipe au nouvel outil',
+        ],
+        limites: [
+          'Dépend de la connexion internet du site',
+          'Matériel à renouveler tous les cinq ans',
+          'Mise en service sous trois à quatre mois',
+        ],
+      })),
     },
   });
   expect(revision.ok()).toBe(true);

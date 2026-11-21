@@ -6,6 +6,7 @@ import {
   ListeDesProcessus,
   type Selection,
 } from '../entretien/elementsDeLEntretien.js';
+import { FormulaireDesOptions } from '../entretien/FormulaireDesOptions.js';
 import { FormulaireDuProcessus } from '../entretien/FormulaireDuProcessus.js';
 import { PanneauEnDirect } from '../entretien/PanneauEnDirect.js';
 import {
@@ -117,6 +118,9 @@ export const Entretien = ({
               }}
             />
           )}
+          {selection === 'options' && (
+            <FormulaireDesOptions saisie={saisie} erreur={erreur} modifier={modifier} />
+          )}
           {typeof selection === 'number' && choisi !== undefined && (
             <FormulaireDuProcessus
               // Un autre processus : un formulaire neuf, sans état hérité du précédent.
@@ -135,7 +139,7 @@ export const Entretien = ({
               }}
             />
           )}
-          {selection !== 'hypotheses' && choisi === undefined && (
+          {typeof selection === 'number' && choisi === undefined && (
             <p className="invitation">
               Aucun processus pour l’instant : ajoutez le premier pour commencer l’entretien.
             </p>

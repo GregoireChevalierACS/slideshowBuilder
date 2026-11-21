@@ -226,7 +226,8 @@ label.interrupteur {
 }
 
 .formulaire-du-processus,
-.formulaire-des-hypotheses {
+.formulaire-des-hypotheses,
+.formulaire-des-options {
   display: grid;
   gap: 12px;
 }
@@ -674,6 +675,95 @@ label.interrupteur {
   border: 1px solid var(--accent);
   border-radius: 6px;
   text-decoration: none;
+  font-weight: 600;
+}
+
+/* --- Diapositive « Deux façons de l'héberger » : une colonne par option --- */
+
+.options-d-hebergement {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2cqw;
+}
+
+.options-d-hebergement > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6cqw;
+  min-width: 0;
+  padding: 1.4cqw 1.6cqw;
+  border: 0.15cqw solid #d9d9d6;
+  border-radius: 1cqw;
+  font-size: 1.5cqw;
+}
+
+.options-d-hebergement h3 {
+  margin: 0;
+  font-size: 2cqw;
+  line-height: 1.2;
+}
+
+.options-d-hebergement .cout-par-heure {
+  font-size: 2.6cqw;
+  font-weight: 700;
+  color: #1f5fbf;
+  line-height: 1.1;
+}
+
+.options-d-hebergement dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4cqw 1.2cqw;
+  margin: 0;
+}
+
+.options-d-hebergement dt {
+  color: #5f6368;
+}
+
+.options-d-hebergement dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.options-d-hebergement :is(.inclus, .limites) {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2cqw;
+  font-size: 1.35cqw;
+}
+
+.options-d-hebergement .inclus li::before {
+  content: '✓ ';
+  color: #2e7d32;
+}
+
+.options-d-hebergement .limites li::before {
+  content: '– ';
+}
+
+.options-d-hebergement .limites {
+  color: #5f6368;
+}
+
+/* --- Saisie des options --- */
+
+textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--bordure);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--texte);
+  resize: vertical;
+}
+
+.formulaire-des-options .chiffrage {
   font-weight: 600;
 }
 

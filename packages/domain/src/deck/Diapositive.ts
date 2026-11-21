@@ -6,6 +6,7 @@ import type { Duree } from '../gains/Duree.js';
 import type { Fourchette, GainDUnProcessus, TotalDesGains } from '../gains/estimerGains.js';
 import type { HypothesesDeCalcul } from '../gains/HypothesesDeCalcul.js';
 import type { Montant } from '../gains/Montant.js';
+import type { CoutDUneOption } from '../solution/chiffrerLesOptions.js';
 import type { Chantier } from './ordonnerLesChantiers.js';
 
 export type PublicVise = 'dirigeant' | 'technique';
@@ -76,6 +77,13 @@ export interface DiapositiveGainsAttendus extends AvecNotes {
   }[];
 }
 
+/** Les façons d'héberger la solution, comparées en coût et en coût par heure récupérée. */
+export interface DiapositiveOptions extends AvecNotes {
+  readonly kind: 'Options';
+  readonly tempsGagneParAn: Fourchette<Duree>;
+  readonly options: readonly CoutDUneOption[];
+}
+
 export interface DiapositiveFeuilleDeRoute extends AvecNotes {
   readonly kind: 'FeuilleDeRoute';
   readonly chantiers: readonly Chantier[];
@@ -98,6 +106,7 @@ export type Diapositive =
   | DiapositiveTableauDesProcessus
   | DiapositiveArchitecture
   | DiapositiveSolutionDUnProcessus
+  | DiapositiveOptions
   | DiapositiveGainsAttendus
   | DiapositiveFeuilleDeRoute
   | DiapositiveHypotheses;

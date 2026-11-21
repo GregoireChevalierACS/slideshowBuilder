@@ -71,11 +71,13 @@ export const useEntretien = (
   const enregistrer = useCallback(
     async (envoyee: SaisieDeDiagnostic) => {
       setSauvegarde({ etat: 'enregistrement' });
-      const { prospect, hypotheses, processus } = envoyee;
+      // Tout sauf la date de l'entretien, qui ne se révise pas ; les options seulement s'il y en a.
+      const { prospect, hypotheses, processus, options } = envoyee;
       const revise = await client.reviserUnDiagnostic(id, version.current, {
         prospect,
         hypotheses,
         processus,
+        ...(options === undefined ? {} : { options }),
       });
 
       if (revise.ok) {

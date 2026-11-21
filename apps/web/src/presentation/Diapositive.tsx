@@ -7,13 +7,21 @@ import {
   type DiapositiveGainsAttendus,
   type DiapositiveHypotheses,
   type DiapositiveObservation,
+  type DiapositiveOptions,
   type DiapositiveSolutionDUnProcessus,
   type DiapositiveTableauDesProcessus,
   type DiapositiveTitre,
   type HypothesesDeCalcul,
 } from '@slideshow/domain';
 import type { ReactNode } from 'react';
-import { enEtp, enEuros, enEurosAuCentime, enHeures, fourchette } from '../entretien/affichage.js';
+import {
+  enCoutParHeure,
+  enEtp,
+  enEuros,
+  enEurosAuCentime,
+  enHeures,
+  fourchette,
+} from '../entretien/affichage.js';
 import { LIBELLES_DES_CATEGORIES, LIBELLES_DES_NIVEAUX } from '../entretien/libelles.js';
 import type { Page } from './pages.js';
 import { SchemaDArchitecture } from './SchemaDArchitecture.js';
@@ -301,6 +309,49 @@ const Hypotheses = ({
   </Cadre>
 );
 
+/** Selon le nombre d'options comparées (trois au plus). */
+const TITRES_DES_OPTIONS: Readonly<Record<number, string>> = {
+  2: 'Deux façons de l’héberger',
+  3: 'Trois façons de l’héberger',
+};
+
+const Options = ({ d }: { readonly d: DiapositiveOptions }) => (
+  <Cadre titre={TITRES_DES_OPTIONS[d.options.length] ?? 'Comment l’héberger'} partie={undefined}>
+    <p className="contexte">
+      Pour{' '}
+      {fourchette(d.tempsGagneParAn.bas.enSecondes, d.tempsGagneParAn.haut.enSecondes, enHeures)}{' '}
+      gagnées par an, comparées sur 3 ans
+    </p>
+    <ul className="options-d-hebergement">
+      {d.options.map(({ option, coutSurUnAn, coutSurTroisAns, coutParHeureRecuperee }) => (
+        <li key={option.nom}>
+          <h3>{option.nom}</h3>
+          <p className="cout-par-heure">{enCoutParHeure(coutParHeureRecuperee)}</p>
+          <p className="legende">par heure récupérée</p>
+          <dl>
+            <dt>Sur 3 ans</dt>
+            <dd>
+              {fourchette(coutSurTroisAns.bas.enCentimes, coutSurTroisAns.haut.enCentimes, enEuros)}
+            </dd>
+            <dt>La première année</dt>
+            <dd>{fourchette(coutSurUnAn.bas.enCentimes, coutSurUnAn.haut.enCentimes, enEuros)}</dd>
+          </dl>
+          <ul className="inclus" aria-label={`Inclus : ${option.nom}`}>
+            {option.inclus.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+          <ul className="limites" aria-label={`Limites : ${option.nom}`}>
+            {option.limites.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </Cadre>
+);
+
 /** Une diapositive sur sa toile 16:9. Le même rendu sert à l'aperçu, au plein écran et au PDF. */
 export const DiapositiveAffichee = ({ page }: { readonly page: Page }) => {
   const { diapositive: d, partie } = page;
@@ -324,6 +375,8 @@ export const DiapositiveAffichee = ({ page }: { readonly page: Page }) => {
         return <FeuilleDeRoute d={d} partie={partie} />;
       case 'Hypotheses':
         return <Hypotheses d={d} partie={partie} />;
+      case 'Options':
+        return <Options d={d} />;
     }
   })();
   return (

@@ -59,6 +59,7 @@ export const pagesDuDeck = (deck: readonly Diapositive[]): Page[] =>
       case 'CoutCache':
       case 'Architecture':
       case 'SolutionDUnProcessus':
+      case 'Options':
         return [{ diapositive: d, partie: undefined }];
     }
   });

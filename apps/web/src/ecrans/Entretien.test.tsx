@@ -376,6 +376,105 @@ describe('Entretien', () => {
     });
   });
 
+  it('compare des options d’hébergement, chiffrées en direct', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options d’hébergement' }));
+    const formulaire = within(screen.getByRole('form', { name: 'Options d’hébergement' }));
+    await userEvent.selectOptions(formulaire.getByLabelText('Ajouter une option'), 'Au bureau');
+    const montant = async (libelle: string, euros: string) => {
+      await userEvent.clear(formulaire.getByLabelText(libelle));
+      await userEvent.type(formulaire.getByLabelText(libelle), euros);
+    };
+    await montant('Mise en place', '2000');
+    await montant('Matériel', '800');
+    await montant('Frais mensuels hauts', '50');
+    await montant('Frais mensuels bas', '30');
+
+    // 608 h/an à 70-90 % : 3 880 € / 1 641,6 h = 2,36 €/h à 4 600 € / 1 276,8 h = 3,60 €/h.
+    expect(formulaire.getByText(/Sur 3 ans/)).toHaveTextContent(
+      '3 880 € à 4 600 € · par heure récupérée : 2,36 €/h à 3,60 €/h',
+    );
+    await waitFor(() => {
+      expect(etat.saisie.options?.[0]).toMatchObject({
+        nom: 'Au bureau',
+        miseEnPlaceEnCentimes: 200_000,
+        materielEnCentimes: 80_000,
+        fraisMensuelsBasEnCentimes: 3_000,
+        fraisMensuelsHautEnCentimes: 5_000,
+      });
+    });
+  });
+
+  it('nomme, complète et retire une option, et signale deux options du même nom', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+    await userEvent.click(screen.getByRole('button', { name: 'Options d’hébergement' }));
+    const formulaire = within(screen.getByRole('form', { name: 'Options d’hébergement' }));
+
+    await userEvent.selectOptions(formulaire.getByLabelText('Ajouter une option'), 'Dans le cloud');
+    await userEvent.selectOptions(
+      formulaire.getByLabelText('Ajouter une option'),
+      'Offre type agence',
+    );
+    await userEvent.type(
+      formulaire.getAllByLabelText('Ce qui est inclus (un point par ligne)')[0] ?? document.body,
+      '{Enter}Sauvegardes',
+    );
+    await userEvent.type(
+      formulaire.getAllByLabelText('Limites (un point par ligne)')[0] ?? document.body,
+      '{Enter}Engagement d’un an',
+    );
+    await waitFor(() => {
+      expect(etat.saisie.options?.[0]?.inclus.at(-1)).toBe('Sauvegardes');
+      expect(etat.saisie.options?.[0]?.limites.at(-1)).toBe('Engagement d’un an');
+    });
+
+    // Un nom vidé : la section reprend son numéro, et le domaine signale le nom manquant.
+    const nom = formulaire.getAllByLabelText('Nom de l’option')[1] ?? document.body;
+    await userEvent.clear(nom);
+    expect(formulaire.getByRole('group', { name: 'Option 2' })).toBeInTheDocument();
+    expect(await formulaire.findByText('Nom de l’option à renseigner.')).toBeInTheDocument();
+    // Un nom déjà pris : l'erreur porte sur l'ensemble des options.
+    await userEvent.type(nom, 'dans le cloud');
+    expect(await formulaire.findByRole('alert')).toHaveTextContent(
+      'Une autre option porte déjà ce nom.',
+    );
+
+    await userEvent.click(
+      formulaire.getAllByRole('button', { name: 'Retirer cette option' })[1] ?? document.body,
+    );
+    await userEvent.click(formulaire.getByRole('button', { name: 'Retirer cette option' }));
+    await waitFor(() => {
+      expect(etat.saisie.options).toBeUndefined();
+    });
+  });
+
+  it('ne propose plus d’option au-delà de trois', async () => {
+    const option = {
+      nom: 'A',
+      miseEnPlaceEnCentimes: 0,
+      materielEnCentimes: 0,
+      fraisMensuelsBasEnCentimes: 0,
+      fraisMensuelsHautEnCentimes: 0,
+      inclus: [],
+      limites: [],
+    };
+    await afficher(
+      unFauxServeur(
+        uneSaisieDeDiagnostic({
+          options: ['A', 'B', 'C'].map((nom) => ({ ...option, nom })),
+        }),
+      ).client,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Options d’hébergement' }));
+
+    expect(screen.queryByLabelText('Ajouter une option')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Retirer cette option' })).toHaveLength(3);
+  });
+
   it('modifie les hypothèses de calcul', async () => {
     const { client, etat } = unFauxServeur();
     await afficher(client);

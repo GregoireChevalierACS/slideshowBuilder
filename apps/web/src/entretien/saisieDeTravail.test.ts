@@ -1,7 +1,13 @@
-import { MODELES_DE_PROCESSUS, type SaisieDeProcessus } from '@slideshow/application';
+import {
+  MODELES_D_OPTIONS,
+  MODELES_DE_PROCESSUS,
+  type ModeleDOption,
+  type SaisieDeProcessus,
+} from '@slideshow/application';
 import { uneSaisieDeDiagnostic, uneSaisieDeProcessus } from '@slideshow/application/testing';
 import { describe, expect, it } from 'vitest';
 import {
+  ajouterUneOption,
   ajouterUnProcessus,
   appliquerUnModele,
   enFrequenceReguliere,
@@ -11,7 +17,9 @@ import {
   processusVierge,
   reconcilierLesTaux,
   remplacerLeProcessus,
+  remplacerLOption,
   retirerLeProcessus,
+  retirerLOption,
 } from './saisieDeTravail.js';
 
 const outil = (nom: string, acces: 'api' | 'email' | 'aucun' = 'api') => ({
@@ -266,5 +274,43 @@ describe('fréquence saisonnière', () => {
       nombre: 10,
       periode: 'jour',
     });
+  });
+});
+
+describe('options d’hébergement', () => {
+  const modeleDOption = (id: string): ModeleDOption => {
+    const trouve = MODELES_D_OPTIONS.find((m) => m.id === id);
+    if (trouve === undefined) throw new Error(id);
+    return trouve;
+  };
+  const nomsDesOptions = (saisie: ReturnType<typeof uneSaisieDeDiagnostic>) =>
+    (saisie.options ?? []).map((o) => o.nom);
+
+  it('ajoute une option à partir d’un modèle', () => {
+    const saisie = ajouterUneOption(uneSaisieDeDiagnostic(), modeleDOption('dans-le-cloud'));
+
+    expect(saisie.options).toStrictEqual([modeleDOption('dans-le-cloud').saisie]);
+  });
+
+  it('donne un nom libre au même modèle ajouté deux fois', () => {
+    let saisie = uneSaisieDeDiagnostic();
+    for (let i = 0; i < 3; i++) saisie = ajouterUneOption(saisie, modeleDOption('au-bureau'));
+
+    expect(nomsDesOptions(saisie)).toStrictEqual(['Au bureau', 'Au bureau (2)', 'Au bureau (3)']);
+  });
+
+  it('remplace une option, et retire la dernière sans laisser de champ vide', () => {
+    const deux = ajouterUneOption(
+      ajouterUneOption(uneSaisieDeDiagnostic(), modeleDOption('au-bureau')),
+      modeleDOption('dans-le-cloud'),
+    );
+    const renommee = remplacerLOption(deux, 1, {
+      ...modeleDOption('dans-le-cloud').saisie,
+      nom: 'Cloud',
+    });
+
+    expect(nomsDesOptions(renommee)).toStrictEqual(['Au bureau', 'Cloud']);
+    expect(nomsDesOptions(retirerLOption(renommee, 0))).toStrictEqual(['Cloud']);
+    expect(retirerLOption(retirerLOption(renommee, 0), 0)).toStrictEqual(uneSaisieDeDiagnostic());
   });
 });

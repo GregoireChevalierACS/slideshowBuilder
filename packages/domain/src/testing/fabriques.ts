@@ -16,6 +16,7 @@ import { HypothesesDeCalcul } from '../gains/HypothesesDeCalcul.js';
 import { Montant } from '../gains/Montant.js';
 import { Pourcentage } from '../gains/Pourcentage.js';
 import { ProcessusRedondant } from '../gains/ProcessusRedondant.js';
+import { OptionDeDeploiement } from '../solution/OptionDeDeploiement.js';
 
 /** Extrait la valeur d'un résultat dont le test garantit le succès. */
 export const valeurDe = <T, E>(resultat: Result<T, E>): T => {
@@ -99,6 +100,7 @@ export const unProcessusDuDiagnostic = (
 export const unDiagnostic = (
   processus: readonly ProcessusDuDiagnostic[] = [unProcessusDuDiagnostic()],
   prospect: Parameters<typeof Prospect.creer>[0] = { nom: 'Négoce Durand' },
+  options: readonly OptionDeDeploiement[] = [],
 ): Diagnostic =>
   valeurDe(
     Diagnostic.creer({
@@ -106,5 +108,36 @@ export const unDiagnostic = (
       dateDEntretien: valeurDe(DateLocale.depuisIso('2026-10-26')),
       hypotheses: desHypotheses(),
       processus,
+      options,
+    }),
+  );
+
+/** Une option d'hébergement, montants en euros pour la lisibilité des tests. */
+export const uneOption = ({
+  nom = 'Au bureau',
+  miseEnPlace = 2_000,
+  materiel = 800,
+  fraisMensuels = [30, 50],
+  inclus = ['Serveur dans vos locaux'],
+  limites = ['Dépend de votre connexion'],
+}: {
+  readonly nom?: string;
+  readonly miseEnPlace?: number;
+  readonly materiel?: number;
+  readonly fraisMensuels?: readonly [number, number];
+  readonly inclus?: readonly string[];
+  readonly limites?: readonly string[];
+} = {}): OptionDeDeploiement =>
+  valeurDe(
+    OptionDeDeploiement.creer({
+      nom,
+      miseEnPlace: unMontant(miseEnPlace * 100),
+      materiel: unMontant(materiel * 100),
+      fraisMensuels: {
+        bas: unMontant(fraisMensuels[0] * 100),
+        haut: unMontant(fraisMensuels[1] * 100),
+      },
+      inclus,
+      limites,
     }),
   );
