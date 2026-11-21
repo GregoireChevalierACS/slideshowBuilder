@@ -1,6 +1,8 @@
 // Composition root de l'interface : seul endroit qui choisit le vrai client et le vrai stockage.
 // Vérifié par le parcours E2E, pas par les tests de composants.
 
+// Police embarquée : le même rendu sous Windows, sous Linux (CI) et dans le PDF remis au client.
+import '@fontsource-variable/inter';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { creerLeClientDeLApi } from './api/clientDeLApi.js';

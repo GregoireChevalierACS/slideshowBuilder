@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { uneSaisieDeDiagnostic, uneSaisieDeProcessus } from '../testing/saisies.js';
 import { decrireLeDiagnostic } from './decrireLeDiagnostic.js';
 import { lireLaSaisie } from './lireLaSaisie.js';
-import type { SaisieDeDiagnostic, SaisieDeProcessus } from './SaisieDeDiagnostic.js';
+import { MODELES_D_OPTIONS } from '../modeles/modelesDOptions.js';
+import type { SaisieDeDiagnostic, SaisieDeProcessus, SaisieDOption } from './SaisieDeDiagnostic.js';
 
 const lu = (saisie: SaisieDeDiagnostic, version = 1) => {
   const resultat = lireLaSaisie(saisie, version);
@@ -205,6 +206,77 @@ describe('lireLaSaisie', () => {
     });
   });
 
+  describe('options d’hébergement', () => {
+    const uneSaisieDOption = (surcharges: Partial<SaisieDOption> = {}): SaisieDOption => ({
+      nom: 'Au bureau',
+      miseEnPlaceEnCentimes: 200_000,
+      materielEnCentimes: 80_000,
+      fraisMensuelsBasEnCentimes: 3_000,
+      fraisMensuelsHautEnCentimes: 5_000,
+      inclus: ['Serveur dans vos locaux'],
+      limites: ['Dépend de votre connexion'],
+      ...surcharges,
+    });
+    const avecDesOptions = (...options: SaisieDOption[]) =>
+      lireLaSaisie(uneSaisieDeDiagnostic({ options }), 1);
+
+    it('n’en lit aucune quand le champ est absent', () => {
+      expect(lu(uneSaisieDeDiagnostic()).options).toStrictEqual([]);
+    });
+
+    it('lit chaque option, montants en centimes', () => {
+      const lues = avecDesOptions(uneSaisieDOption(), uneSaisieDOption({ nom: 'Dans le cloud' }));
+
+      expect(lues.ok && lues.value.options.map((o) => o.nom)).toStrictEqual([
+        'Au bureau',
+        'Dans le cloud',
+      ]);
+      expect(lues.ok && lues.value.options[0]).toMatchObject({
+        miseEnPlace: { enCentimes: 200_000 },
+        materiel: { enCentimes: 80_000 },
+        fraisMensuels: { bas: { enCentimes: 3_000 }, haut: { enCentimes: 5_000 } },
+      });
+    });
+
+    it.each([
+      [{ miseEnPlaceEnCentimes: -1 }, 'miseEnPlaceEnCentimes', 'MontantNegatif'],
+      [{ materielEnCentimes: 1.5 }, 'materielEnCentimes', 'MontantNonEntier'],
+      [{ fraisMensuelsBasEnCentimes: -1 }, 'fraisMensuelsBasEnCentimes', 'MontantNegatif'],
+      [{ fraisMensuelsHautEnCentimes: -1 }, 'fraisMensuelsHautEnCentimes', 'MontantNegatif'],
+      [{ nom: ' ' }, 'nom', 'NomDOptionVide'],
+      [{ nom: 'n'.repeat(41) }, 'nom', 'NomDOptionTropLong'],
+      [
+        { fraisMensuelsBasEnCentimes: 6_000 },
+        'fraisMensuelsBasEnCentimes',
+        'FraisMensuelsBasSuperieursAuxHauts',
+      ],
+      [{ inclus: [''] }, 'inclus', 'PointVide'],
+      [{ limites: ['a'.repeat(41)] }, 'limites', 'PointTropLong'],
+      [{ limites: ['1', '2', '3', '4'] }, 'limites', 'TropDePoints'],
+    ] as const)('%o → options[1].%s', (surcharges, champ, kind) => {
+      expect(
+        avecDesOptions(uneSaisieDOption(), uneSaisieDOption({ nom: 'B', ...surcharges })),
+      ).toMatchObject({
+        ok: false,
+        error: { kind: 'SaisieInvalide', champ: `options[1].${champ}`, erreur: { kind } },
+      });
+    });
+
+    it.each([
+      [[uneSaisieDOption({ nom: 'A' }), uneSaisieDOption({ nom: 'a' })], 'NomDOptionEnDouble'],
+      [['A', 'B', 'C', 'D'].map((nom) => uneSaisieDOption({ nom })), 'TropDOptions'],
+    ] as const)('refuse les options ensemble : %#', (options, kind) => {
+      expect(avecDesOptions(...options)).toMatchObject({
+        ok: false,
+        error: { champ: 'options', erreur: { kind } },
+      });
+    });
+
+    it('lit chaque modèle d’option tel quel', () => {
+      expect(avecDesOptions(...MODELES_D_OPTIONS.map((m) => m.saisie)).ok).toBe(true);
+    });
+  });
+
   describe('aller-retour avec decrireLeDiagnostic', () => {
     it('redonne exactement la saisie de référence', () => {
       expect(decrireLeDiagnostic(lu(uneSaisieDeDiagnostic()))).toStrictEqual(
@@ -295,16 +367,46 @@ describe('lireLaSaisie', () => {
         )
         .chain((liste) =>
           // Sans saison, le champ est absent : un 0 explicite ne se relirait pas à l'identique.
-          fc.option(fc.integer({ min: 1, max: 45 }), { nil: undefined }).map((semainesDePointe) =>
-            uneSaisieDeDiagnostic({
-              processus: liste,
-              hypotheses: {
-                joursTravaillesParAn: 228,
-                heuresAnnuellesTempsPlein: 1_607,
-                ...(semainesDePointe === undefined ? {} : { semainesDePointe }),
-              },
-            }),
-          ),
+          fc
+            .tuple(
+              fc.option(fc.integer({ min: 1, max: 45 }), { nil: undefined }),
+              fc.array(
+                fc.record(
+                  {
+                    miseEnPlaceEnCentimes: fc.nat(2_000_000),
+                    materielEnCentimes: fc.nat(500_000),
+                    frais: fc.tuple(fc.nat(100_000), fc.nat(100_000)),
+                    inclus: fc.array(fc.constantFrom('Sauvegardes', 'Maintenance'), {
+                      maxLength: 3,
+                    }),
+                    limites: fc.array(fc.constantFrom('Abonnement', 'Connexion'), { maxLength: 3 }),
+                  },
+                  { noNullPrototype: true },
+                ),
+                { maxLength: 3 },
+              ),
+            )
+            .map(([semainesDePointe, options]) =>
+              uneSaisieDeDiagnostic({
+                processus: liste,
+                // Sans option, le champ est absent, comme les semaines de pointe.
+                ...(options.length === 0
+                  ? {}
+                  : {
+                      options: options.map(({ frais, ...o }, i): SaisieDOption => ({
+                        nom: `Option ${String(i + 1)}`,
+                        ...o,
+                        fraisMensuelsBasEnCentimes: Math.min(...frais),
+                        fraisMensuelsHautEnCentimes: Math.max(...frais),
+                      })),
+                    }),
+                hypotheses: {
+                  joursTravaillesParAn: 228,
+                  heuresAnnuellesTempsPlein: 1_607,
+                  ...(semainesDePointe === undefined ? {} : { semainesDePointe }),
+                },
+              }),
+            ),
         );
 
       fc.assert(

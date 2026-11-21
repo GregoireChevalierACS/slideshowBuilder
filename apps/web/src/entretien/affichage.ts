@@ -1,4 +1,5 @@
 import type { ErreurDuDomaine, SaisieInvalide } from '@slideshow/application';
+import { CARACTERES_PAR_NOM, CARACTERES_PAR_POINT, POINTS_PAR_LISTE } from '@slideshow/domain';
 
 const SECONDES_PAR_HEURE = 3_600;
 
@@ -27,6 +28,24 @@ export const enEurosAuCentime = (centimes: number): string => eurosAuCentime.for
 
 export const enEtp = (centiemes: number): string =>
   `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(centiemes / 100)} ETP`;
+
+/**
+ * Un coût par heure récupérée, en fourchette. Sans heure gagnée dans l'hypothèse prudente, il n'a
+ * pas de borne haute ; sans heure gagnée du tout, il n'existe pas.
+ */
+export const enCoutParHeure = ({
+  bas,
+  haut,
+}: {
+  readonly bas: { readonly enCentimes: number } | undefined;
+  readonly haut: { readonly enCentimes: number } | undefined;
+}): string => {
+  if (bas === undefined) return 'aucune heure gagnée';
+  const parHeure = (centimes: number) => `${enEurosAuCentime(centimes)}/h`;
+  return haut === undefined
+    ? `dès ${parHeure(bas.enCentimes)}`
+    : fourchette(bas.enCentimes, haut.enCentimes, parHeure);
+};
 
 export const fourchette = (
   bas: number,
@@ -59,6 +78,14 @@ const MESSAGES: Readonly<Record<ErreurDuDomaine['kind'], string>> = {
   NomDeProcessusVide: 'Nom du processus à renseigner.',
   TauxBasSuperieurAuTauxHaut: 'Le taux bas dépasse le taux haut.',
   NomDeProspectVide: 'Nom du prospect à renseigner.',
+  NomDOptionVide: 'Nom de l’option à renseigner.',
+  NomDOptionEnDouble: 'Une autre option porte déjà ce nom.',
+  TropDOptions: 'Trois options au plus : la diapositive les compare en trois colonnes.',
+  FraisMensuelsBasSuperieursAuxHauts: 'Les frais bas dépassent les frais hauts.',
+  PointVide: 'Un point vide.',
+  TropDePoints: `${String(POINTS_PAR_LISTE)} points au plus : la diapositive les montre en colonnes.`,
+  PointTropLong: `${String(CARACTERES_PAR_POINT)} caractères au plus par point.`,
+  NomDOptionTropLong: `${String(CARACTERES_PAR_NOM)} caractères au plus.`,
 };
 
 /** Le message à afficher sous un champ, s'il est celui que le domaine refuse. */

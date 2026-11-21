@@ -1,9 +1,11 @@
 import {
   suggererLesTaux,
   type ModeleDeProcessus,
+  type ModeleDOption,
   type SaisieDeDiagnostic,
   type SaisieDeFrequence,
   type SaisieDeProcessus,
+  type SaisieDOption,
   type SaisieDOutil,
   type SuggestionDeTaux,
 } from '@slideshow/application';
@@ -151,3 +153,45 @@ export const enFrequenceReguliere = (frequence: SaisieDeFrequence): SaisieDeFreq
         periode: frequence.periode,
       }
     : frequence;
+
+const optionsDe = (saisie: SaisieDeDiagnostic) => saisie.options ?? [];
+
+/** Sans option, le champ disparaît de la saisie (comme avant les options). */
+export const avecLesOptions = (
+  saisie: SaisieDeDiagnostic,
+  options: readonly SaisieDOption[],
+): SaisieDeDiagnostic => {
+  // Champ par champ : un nouveau champ obligatoire de la saisie ne compilerait pas sans être repris.
+  const { prospect, dateDEntretien, hypotheses, processus } = saisie;
+  const sansOptions = { prospect, dateDEntretien, hypotheses, processus };
+  return options.length === 0 ? sansOptions : { ...sansOptions, options };
+};
+
+/** Ajoute une option à partir d'un modèle, sous un nom libre (le domaine refuse les doublons). */
+export const ajouterUneOption = (
+  saisie: SaisieDeDiagnostic,
+  modele: ModeleDOption,
+): SaisieDeDiagnostic => {
+  const options = optionsDe(saisie);
+  const pris = new Set(options.map((o) => cle(o.nom)));
+  let nom = modele.saisie.nom;
+  for (let numero = 2; pris.has(cle(nom)); numero++)
+    nom = `${modele.saisie.nom} (${String(numero)})`;
+  return avecLesOptions(saisie, [...options, { ...modele.saisie, nom }]);
+};
+
+export const remplacerLOption = (
+  saisie: SaisieDeDiagnostic,
+  position: number,
+  option: SaisieDOption,
+): SaisieDeDiagnostic =>
+  avecLesOptions(
+    saisie,
+    optionsDe(saisie).map((o, i) => (i === position ? option : o)),
+  );
+
+export const retirerLOption = (saisie: SaisieDeDiagnostic, position: number): SaisieDeDiagnostic =>
+  avecLesOptions(
+    saisie,
+    optionsDe(saisie).filter((_, i) => i !== position),
+  );

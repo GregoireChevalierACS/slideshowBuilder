@@ -64,6 +64,7 @@ export type { NiveauDAutomatisation } from './conception/reglesDeConception.js';
 export { DateLocale, type DateInvalide } from './diagnostic/DateLocale.js';
 export {
   Diagnostic,
+  OPTIONS_PAR_DIAGNOSTIC,
   type ContenuDuDiagnostic,
   type DiagnosticInvalide,
   type ProcessusDuDiagnostic,
@@ -73,3 +74,12 @@ export { Prospect, type ProspectInvalide } from './diagnostic/Prospect.js';
 export { construireDeck } from './deck/construireDeck.js';
 export type * from './deck/Diapositive.js';
 export type { Chantier } from './deck/ordonnerLesChantiers.js';
+export { chiffrerLesOptions, type CoutDUneOption } from './solution/chiffrerLesOptions.js';
+export {
+  CARACTERES_PAR_NOM,
+  CARACTERES_PAR_POINT,
+  OptionDeDeploiement,
+  POINTS_PAR_LISTE,
+  type DescriptionDOption,
+  type OptionInvalide,
+} from './solution/OptionDeDeploiement.js';

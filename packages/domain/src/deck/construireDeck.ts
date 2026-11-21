@@ -16,6 +16,10 @@ const detailTechnique = (p: ParametresDuDeck) => versionComplete(p) && p.public 
 const noteDAlerte = (alerte: AlerteDeCoherence, heuresAnnuellesTempsPlein: number): string =>
   `À vérifier avant de présenter : « ${alerte.processus} » représenterait ${String(alerte.heuresParPersonneParAn)} h par personne et par an, plus qu’un temps plein (${String(heuresAnnuellesTempsPlein)} h). La fréquence a peut-être été saisie pour toute l’équipe au lieu d’une personne.`;
 
+/** Pour répondre à « d'où vient ce chiffre ? » sans le surcharger à l'écran. */
+export const NOTE_DU_COUT_PAR_HEURE =
+  'Coût par heure récupérée = (mise en place + matériel + 36 mois de frais) ÷ heures gagnées sur 3 ans. La fourchette va des frais bas avec le gain haut aux frais hauts avec le gain bas. Seules les tâches faites aujourd’hui comptent dans les heures gagnées.';
+
 /**
  * Construit la liste des diapositives d'un diagnostic, selon le public et la durée visés.
  * Pure et déterministe : même diagnostic, mêmes paramètres, même deck.
@@ -24,7 +28,7 @@ export const construireDeck = (
   diagnostic: Diagnostic,
   parametres: ParametresDuDeck,
 ): Diapositive[] => {
-  const { estimation, architecture, hypotheses, prospect } = diagnostic;
+  const { estimation, architecture, hypotheses, prospect, coutDesOptions } = diagnostic;
   const { total } = estimation;
   const sansNotes = { notes: [] } as const;
 
@@ -113,6 +117,21 @@ export const construireDeck = (
           ...sansNotes,
         },
       ],
+    },
+    {
+      // Seulement quand des options ont été saisies : sans elles, rien à comparer.
+      inclure: toujours,
+      diapositives: () =>
+        coutDesOptions.length === 0
+          ? []
+          : [
+              {
+                kind: 'Options',
+                tempsGagneParAn: total.tempsGagneParAn,
+                options: coutDesOptions,
+                notes: [NOTE_DU_COUT_PAR_HEURE],
+              },
+            ],
     },
     {
       inclure: toujours,
