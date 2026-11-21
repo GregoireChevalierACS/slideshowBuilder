@@ -39,3 +39,7 @@ ETP libérés      = temps gagné total / heures annuelles d'un temps plein
 - ✅ Les propriétés (gain croissant avec l'effectif, bas ≤ haut, gain ≤ temps actuel, total indépendant de l'ordre) sont vérifiées sur des centaines de cas générés.
 - ❌ Le retour sur investissement (coût de réalisation, maintenance, délai de retour) est **reporté** : les gains sont bruts.
 - ❌ Une fréquence hebdomadaire donne des occurrences fractionnaires (45,6 semaines) : l'arrondi se fait à la seconde, sur le temps total du processus.
+
+## Révisions
+
+- **2026-11-20** : fréquences saisonnières et semaines de pointe, fréquences à une décimale. Voir [ADR 0012](0012-modele-de-calcul-saisonnier.md).

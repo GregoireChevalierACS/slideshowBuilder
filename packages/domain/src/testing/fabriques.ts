@@ -11,7 +11,7 @@ import { Prospect } from '../diagnostic/Prospect.js';
 import { CoutHoraire } from '../gains/CoutHoraire.js';
 import { Duree } from '../gains/Duree.js';
 import { Effectif } from '../gains/Effectif.js';
-import { Frequence, type Periode } from '../gains/Frequence.js';
+import { Frequence, type Periode, type PeriodeSaisonniere } from '../gains/Frequence.js';
 import { HypothesesDeCalcul } from '../gains/HypothesesDeCalcul.js';
 import { Montant } from '../gains/Montant.js';
 import { Pourcentage } from '../gains/Pourcentage.js';
@@ -30,13 +30,26 @@ export const unMontant = (centimes: number): Montant => valeurDe(Montant.depuisC
 export const uneFrequence = (nombre: number, periode: Periode): Frequence =>
   valeurDe(Frequence.creer(nombre, periode));
 
-export const desHypotheses = (joursTravaillesParAn = 228, heuresAnnuellesTempsPlein = 1_607) =>
-  valeurDe(HypothesesDeCalcul.creer({ joursTravaillesParAn, heuresAnnuellesTempsPlein }));
+export const uneFrequenceSaisonniere = (
+  enSaison: number,
+  horsSaison: number,
+  periode: PeriodeSaisonniere,
+): Frequence => valeurDe(Frequence.saisonniere(enSaison, horsSaison, periode));
+
+export const desHypotheses = (
+  joursTravaillesParAn = 228,
+  heuresAnnuellesTempsPlein = 1_607,
+  semainesDePointe = 0,
+) =>
+  valeurDe(
+    HypothesesDeCalcul.creer({ joursTravaillesParAn, heuresAnnuellesTempsPlein, semainesDePointe }),
+  );
 
 export interface DescriptionDeProcessus {
   readonly nom?: string;
   readonly dureeEnSecondes?: number;
-  readonly frequence?: readonly [number, Periode];
+  /** Une fréquence régulière (nombre et période), ou une fréquence déjà construite. */
+  readonly frequence?: readonly [number, Periode] | Frequence;
   readonly personnes?: number;
   readonly tauxBas?: number;
   readonly tauxHaut?: number;
@@ -45,12 +58,13 @@ export interface DescriptionDeProcessus {
 
 /** Processus de référence : la saisie des factures fournisseurs (voir les scénarios). */
 export const unProcessus = (description: DescriptionDeProcessus = {}): ProcessusRedondant => {
-  const [nombre, periode] = description.frequence ?? [20, 'jour'];
+  const frequence = description.frequence ?? [20, 'jour'];
   return valeurDe(
     ProcessusRedondant.creer({
       nom: description.nom ?? 'Saisie des factures fournisseurs',
       dureeUnitaire: uneDuree(description.dureeEnSecondes ?? 240),
-      frequence: uneFrequence(nombre, periode),
+      frequence:
+        frequence instanceof Frequence ? frequence : uneFrequence(frequence[0], frequence[1]),
       effectif: unEffectif(description.personnes ?? 2),
       tauxBas: unPourcentage(description.tauxBas ?? 70),
       tauxHaut: unPourcentage(description.tauxHaut ?? 90),

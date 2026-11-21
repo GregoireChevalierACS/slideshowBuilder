@@ -3,6 +3,7 @@ import {
   suggererLesTaux,
   type SaisieDeCoutHoraire,
   type SaisieDeDiagnostic,
+  type SaisieDeFrequence,
   type SaisieDeProcessus,
   type SaisieDOutil,
   type SaisieInvalide,
@@ -18,9 +19,16 @@ import {
   CHOIX_DES_DONNEES,
   CHOIX_DES_NATURES,
   CHOIX_DES_PERIODES,
+  CHOIX_DES_PERIODES_SAISONNIERES,
   LIBELLES_DES_NIVEAUX,
 } from './libelles.js';
-import { appliquerUnModele, outilsCites, reconcilierLesTaux } from './saisieDeTravail.js';
+import {
+  appliquerUnModele,
+  enFrequenceReguliere,
+  enFrequenceSaisonniere,
+  outilsCites,
+  reconcilierLesTaux,
+} from './saisieDeTravail.js';
 
 const SECONDES_PAR_MINUTE = 60;
 
@@ -75,6 +83,100 @@ const ChampsDOutil = ({
       }}
     />
   </div>
+);
+
+/** Une fréquence régulière, ou deux valeurs (en saison, hors saison) pour une activité saisonnière. */
+const ChampsDeFrequence = ({
+  frequence,
+  erreur,
+  modifier,
+}: {
+  readonly frequence: SaisieDeFrequence;
+  readonly erreur: string | undefined;
+  readonly modifier: (frequence: SaisieDeFrequence) => void;
+}) =>
+  'enSaison' in frequence ? (
+    <>
+      <ChampNumerique
+        libelle="Nombre de fois en saison, par personne"
+        valeur={frequence.enSaison}
+        modifier={(enSaison) => {
+          modifier({ ...frequence, enSaison });
+        }}
+      />
+      <ChampNumerique
+        libelle="Nombre de fois hors saison, par personne"
+        valeur={frequence.horsSaison}
+        erreur={erreur}
+        modifier={(horsSaison) => {
+          modifier({ ...frequence, horsSaison });
+        }}
+      />
+      <ChampDeChoix
+        libelle="Période"
+        valeur={frequence.periode}
+        choix={CHOIX_DES_PERIODES_SAISONNIERES}
+        modifier={(periode) => {
+          modifier({ ...frequence, periode });
+        }}
+      />
+    </>
+  ) : (
+    <>
+      <ChampNumerique
+        libelle="Nombre de fois, par personne"
+        valeur={frequence.nombre}
+        erreur={erreur}
+        modifier={(nombre) => {
+          modifier({ ...frequence, nombre });
+        }}
+      />
+      <ChampDeChoix
+        libelle="Période"
+        valeur={frequence.periode}
+        choix={CHOIX_DES_PERIODES}
+        modifier={(periode) => {
+          modifier({ ...frequence, periode });
+        }}
+      />
+    </>
+  );
+
+/**
+ * À la fin de la section : le cas courant (une fréquence régulière) se saisit au clavier sans
+ * passer par cette case.
+ */
+const InterrupteurDeSaison = ({
+  frequence,
+  sansSaison,
+  modifier,
+}: {
+  readonly frequence: SaisieDeFrequence;
+  /** Aucune semaine de pointe dans les hypothèses : la valeur en saison ne compte pas encore. */
+  readonly sansSaison: boolean;
+  readonly modifier: (frequence: SaisieDeFrequence) => void;
+}) => (
+  <>
+    <label className="interrupteur">
+      <input
+        type="checkbox"
+        checked={'enSaison' in frequence}
+        onChange={(evenement) => {
+          modifier(
+            evenement.target.checked
+              ? enFrequenceSaisonniere(frequence)
+              : enFrequenceReguliere(frequence),
+          );
+        }}
+      />
+      Activité saisonnière
+    </label>
+    {'enSaison' in frequence && sansSaison && (
+      <p className="aide">
+        Aucune semaine de pointe dans les hypothèses : seule la valeur hors saison compte.
+      </p>
+    )}
+  </>
 );
 
 /** Le formulaire d'un processus, dans l'ordre de l'entretien : quoi, combien, avec quoi, comment, coût, taux. */
@@ -164,20 +266,11 @@ export const FormulaireDuProcessus = ({
             changer({ ...processus, dureeUnitaireEnSecondes: minutes * SECONDES_PAR_MINUTE });
           }}
         />
-        <ChampNumerique
-          libelle="Nombre de fois, par personne"
-          valeur={processus.frequence.nombre}
+        <ChampsDeFrequence
+          frequence={processus.frequence}
           erreur={champ('frequence')}
-          modifier={(nombre) => {
-            changer({ ...processus, frequence: { ...processus.frequence, nombre } });
-          }}
-        />
-        <ChampDeChoix
-          libelle="Période"
-          valeur={processus.frequence.periode}
-          choix={CHOIX_DES_PERIODES}
-          modifier={(periode) => {
-            changer({ ...processus, frequence: { ...processus.frequence, periode } });
+          modifier={(frequence) => {
+            changer({ ...processus, frequence });
           }}
         />
         <ChampNumerique
@@ -186,6 +279,13 @@ export const FormulaireDuProcessus = ({
           erreur={champ('personnes')}
           modifier={(personnes) => {
             changer({ ...processus, personnes });
+          }}
+        />
+        <InterrupteurDeSaison
+          frequence={processus.frequence}
+          sansSaison={(saisie.hypotheses.semainesDePointe ?? 0) === 0}
+          modifier={(frequence) => {
+            changer({ ...processus, frequence });
           }}
         />
       </Section>

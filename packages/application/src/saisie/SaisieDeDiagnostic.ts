@@ -5,6 +5,7 @@ import type {
   ModeDAcces,
   NatureDeTache,
   Periode,
+  PeriodeSaisonniere,
 } from '@slideshow/domain';
 
 // Format de saisie : uniquement des nombres, des chaînes et des choix fermés, sérialisable tel quel
@@ -25,11 +26,20 @@ export type SaisieDeCoutHoraire =
       readonly coefficientDeCharges: number;
     };
 
+/** Régulière toute l'année, ou saisonnière : une valeur en saison, une autre le reste de l'année. */
+export type SaisieDeFrequence =
+  | { readonly nombre: number; readonly periode: Periode }
+  | {
+      readonly enSaison: number;
+      readonly horsSaison: number;
+      readonly periode: PeriodeSaisonniere;
+    };
+
 export interface SaisieDeProcessus {
   readonly nom: string;
   readonly dureeUnitaireEnSecondes: number;
   /** Par personne. */
-  readonly frequence: { readonly nombre: number; readonly periode: Periode };
+  readonly frequence: SaisieDeFrequence;
   readonly personnes: number;
   readonly tauxBas: number;
   readonly tauxHaut: number;
@@ -54,6 +64,8 @@ export interface SaisieDeDiagnostic {
   readonly hypotheses: {
     readonly joursTravaillesParAn: number;
     readonly heuresAnnuellesTempsPlein: number;
+    /** Absent pour une activité sans saison (0 semaine de pointe). */
+    readonly semainesDePointe?: number;
   };
   readonly processus: readonly SaisieDeProcessus[];
 }

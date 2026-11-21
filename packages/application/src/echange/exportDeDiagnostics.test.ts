@@ -28,7 +28,7 @@ const unHistorique = (id: string, ...saisies: SaisieDeDiagnostic[]) => {
 
 const unExport = (diagnostics: readonly unknown[]) => ({
   format: 'slideshow-builder/diagnostics',
-  versionDuFormat: 1,
+  versionDuFormat: 2,
   exporteLe: '2026-10-30',
   diagnostics,
 });
@@ -75,6 +75,32 @@ describe('export de diagnostics', () => {
     );
   });
 
+  it('lit encore un fichier exporté avant la saisonnalité (format 1)', () => {
+    const lu = lireUnExport({
+      ...unExport([{ id: 'a', versions: [uneVersion(1)] }]),
+      versionDuFormat: 1,
+    });
+
+    expect(lu.ok && lu.value.map((d) => d.historique.length)).toStrictEqual([1]);
+  });
+
+  it('transporte les fréquences saisonnières et les semaines de pointe', () => {
+    const saisonniere = uneSaisieDeDiagnostic({
+      hypotheses: {
+        joursTravaillesParAn: 228,
+        heuresAnnuellesTempsPlein: 1_607,
+        semainesDePointe: 13,
+      },
+      processus: [
+        uneSaisieDeProcessus({ frequence: { enSaison: 4, horsSaison: 1.5, periode: 'semaine' } }),
+      ],
+    });
+    const exporte = decrireUnExport(le('2026-11-20'), [unHistorique('a', saisonniere)]);
+
+    expect(exporte.diagnostics[0]?.versions[0]?.saisie).toStrictEqual(saisonniere);
+    expect(lireUnExport(JSON.parse(JSON.stringify(exporte))).ok).toBe(true);
+  });
+
   describe('refuse un fichier entier', () => {
     it.each([
       ['un tableau', []],
@@ -85,9 +111,9 @@ describe('export de diagnostics', () => {
     });
 
     it('exporté par une version plus récente de l’application', () => {
-      expect(lireUnExport({ ...unExport([]), versionDuFormat: 2 })).toStrictEqual({
+      expect(lireUnExport({ ...unExport([]), versionDuFormat: 3 })).toStrictEqual({
         ok: false,
-        error: { kind: 'FormatTropRecent', versionDuFormat: 2 },
+        error: { kind: 'FormatTropRecent', versionDuFormat: 3 },
       });
     });
 

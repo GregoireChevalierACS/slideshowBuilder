@@ -89,7 +89,13 @@ const lireLeProcessus = (
   if (!dureeUnitaire.ok) return dureeUnitaire;
   const frequence = au(
     champ('frequence'),
-    Frequence.creer(saisie.frequence.nombre, saisie.frequence.periode),
+    'enSaison' in saisie.frequence
+      ? Frequence.saisonniere(
+          saisie.frequence.enSaison,
+          saisie.frequence.horsSaison,
+          saisie.frequence.periode,
+        )
+      : Frequence.creer(saisie.frequence.nombre, saisie.frequence.periode),
   );
   if (!frequence.ok) return frequence;
   const effectif = au(champ('personnes'), Effectif.creer(saisie.personnes));
