@@ -25,6 +25,11 @@ export interface DescriptionDeProcessusRedondant {
   /** Part du temps que l'automatisation supprime, estimation optimiste. */
   readonly tauxHaut: Pourcentage;
   readonly coutHoraire: CoutHoraire;
+  /**
+   * La tâche n'est plus faite aujourd'hui (faute de temps) : son temps actuel vaut 0. L'automatiser
+   * la remet en place ; c'est du travail rattrapé, pas du temps gagné. Faux par défaut.
+   */
+  readonly abandonne?: boolean;
 }
 
 /** Une tâche répétitive relevée pendant l'entretien, candidate à l'automatisation. */
@@ -36,6 +41,7 @@ export class ProcessusRedondant implements DescriptionDeProcessusRedondant {
   readonly tauxBas: Pourcentage;
   readonly tauxHaut: Pourcentage;
   readonly coutHoraire: CoutHoraire;
+  readonly abandonne: boolean;
 
   private constructor(description: DescriptionDeProcessusRedondant) {
     this.nom = description.nom;
@@ -45,6 +51,7 @@ export class ProcessusRedondant implements DescriptionDeProcessusRedondant {
     this.tauxBas = description.tauxBas;
     this.tauxHaut = description.tauxHaut;
     this.coutHoraire = description.coutHoraire;
+    this.abandonne = description.abandonne ?? false;
   }
 
   static creer(

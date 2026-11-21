@@ -4,7 +4,7 @@ import type { SaisieDeDiagnostic } from '../saisie/SaisieDeDiagnostic.js';
 export interface ExportDeDiagnostics {
   readonly format: 'slideshow-builder/diagnostics';
   /** Les versions précédentes restent lisibles ; on écrit toujours la dernière. */
-  readonly versionDuFormat: 1 | 2 | 3;
+  readonly versionDuFormat: 1 | 2 | 3 | 4;
   /** Format ISO. */
   readonly exporteLe: string;
   readonly diagnostics: readonly {

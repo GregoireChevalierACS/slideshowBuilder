@@ -257,6 +257,31 @@ describe('Scénarios de référence', () => {
       expect(estimation().total.valeurActuelleParAn.enCentimes).toBe(1_728_180);
     });
 
+    it('chiffre à part la relance des devis, qui n’est plus faite : 48,8 h nécessaires, 39 à 46,4 h rattrapées', () => {
+      // 15 × 13 + 4 × 32,6 = 325,4 devis × 540 s (3 relances) = 175 716 s (48,8 h)
+      // à 80 % : 140 572,8 s ; à 95 % : 166 930,2 s
+      const relance = unProcessus({
+        nom: 'Relance des devis',
+        dureeEnSecondes: 540,
+        frequence: uneFrequenceSaisonniere(15, 4, 'semaine'),
+        personnes: 1,
+        tauxBas: 80,
+        tauxHaut: 95,
+        coutHoraire: aTrenteSixEurosDeLHeure(),
+        abandonne: true,
+      });
+      const avecLaRelance = estimerGains(
+        [...estimation().parProcessus.map((g) => g.processus), relance],
+        desHypotheses(228, 1_607, 13),
+      );
+
+      expect(avecLaRelance.total).toStrictEqual(estimation().total);
+      expect(avecLaRelance.travailRattrape.total).toMatchObject({
+        tempsActuelParAn: { enSecondes: 175_716 },
+        tempsGagneParAn: { bas: { enSecondes: 140_573 }, haut: { enSecondes: 166_930 } },
+      });
+    });
+
     it('compare deux hébergements en coût par heure récupérée sur 3 ans', () => {
       // Gain sur 3 ans : 3 × 623 118 s = 519,3 h à 3 × 952 641 s = 793,9 h.
       // Au bureau : 2 000 + 800 + 36 × 30 = 3 880 € à 2 000 + 800 + 36 × 50 = 4 600 €,

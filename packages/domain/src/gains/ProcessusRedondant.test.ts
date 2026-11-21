@@ -34,8 +34,15 @@ describe('ProcessusRedondant', () => {
         tauxBas: { valeur: 70 },
         tauxHaut: { valeur: 90 },
         coutHoraire: { kind: 'Direct' },
+        abandonne: false,
       },
     });
+  });
+
+  it('peut ne plus être fait aujourd’hui', () => {
+    const processus = ProcessusRedondant.creer(saisie({ abandonne: true }));
+
+    expect(processus.ok && processus.value.abandonne).toBe(true);
   });
 
   it('retire les espaces autour du nom', () => {

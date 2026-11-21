@@ -272,3 +272,47 @@ describe('DiapositiveAffichee : options d’hébergement', () => {
     );
   });
 });
+
+describe('DiapositiveAffichee : travail rattrapé', () => {
+  const gains = (nombreDeProcessusFaits: number) => {
+    const lu = lireLaSaisie(
+      uneSaisieDeDiagnostic({
+        processus: [
+          ...Array.from({ length: nombreDeProcessusFaits }, (_, i) =>
+            uneSaisieDeProcessus({ nom: `Tâche ${String(i + 1)}` }),
+          ),
+          uneSaisieDeProcessus({
+            nom: 'Relance des devis',
+            dureeUnitaireEnSecondes: 600,
+            frequence: { nombre: 15, periode: 'semaine' },
+            personnes: 1,
+            tauxBas: 80,
+            tauxHaut: 95,
+            abandonne: true,
+          }),
+        ],
+      }),
+      1,
+    );
+    if (!lu.ok) throw new Error('saisie de test invalide');
+    return pagesDuDeck(construireDeck(lu.value, { public: 'dirigeant', duree: 'courte' })).filter(
+      (p) => p.diapositive.kind === 'GainsAttendus',
+    );
+  };
+
+  it('le présente à part, hors gain : 114 h nécessaires, 91 à 108 h rattrapées', () => {
+    const [seule] = gains(1);
+    const contenu = texte(seule ?? page([], 'GainsAttendus'));
+
+    expect(contenu).toContain(
+      'En plus, du travail rattrapé (hors gain) : Relance des devis, 91 h à 108 h par an sur 114 h qui ne sont plus faites',
+    );
+    expect(contenu).not.toContain('Relance des devis1');
+  });
+
+  it('seulement sur la dernière page des gains', () => {
+    const pages = gains(LIGNES_PAR_PAGE + 1);
+
+    expect(pages.map((p) => texte(p).includes('travail rattrapé'))).toStrictEqual([false, true]);
+  });
+});

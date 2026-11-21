@@ -52,6 +52,74 @@ const avecDesOptions = () =>
   ]);
 
 describe('construireDeck', () => {
+  describe('tâches abandonnées', () => {
+    const avecUneRelanceAbandonnee = () =>
+      unDiagnostic([
+        unProcessusDuDiagnostic({ nom: 'Saisie des factures' }, { donnees: 'documents' }),
+        unProcessusDuDiagnostic(
+          {
+            nom: 'Relance des devis',
+            dureeEnSecondes: 600,
+            frequence: [15, 'semaine'],
+            personnes: 1,
+            abandonne: true,
+          },
+          { nature: 'relance' },
+        ),
+      ]);
+
+    it('ne comptent pas dans le coût caché', () => {
+      const deck = construireDeck(avecUneRelanceAbandonnee(), complet('dirigeant'));
+
+      expect(diapositive(deck, 'CoutCache').nombreDeProcessus).toBe(1);
+      expect(diapositive(deck, 'Observation').processus).toStrictEqual([
+        'Saisie des factures',
+        'Relance des devis',
+      ]);
+    });
+
+    it('apparaissent à part sur la diapositive des gains, avec une note sur l’effet commercial', () => {
+      const diagnostic = avecUneRelanceAbandonnee();
+      const gains = diapositive(construireDeck(diagnostic, complet('dirigeant')), 'GainsAttendus');
+      const [relance] = diagnostic.estimation.travailRattrape.parProcessus;
+
+      expect(gains.parProcessus.map((p) => p.processus)).toStrictEqual(['Saisie des factures']);
+      expect(gains.travailRattrape).toStrictEqual([
+        {
+          processus: 'Relance des devis',
+          tempsNecessaireParAn: relance?.tempsActuelParAn,
+          tempsRattrapeParAn: relance?.tempsGagneParAn,
+        },
+      ]);
+      expect(gains.notes).toHaveLength(1);
+      expect(gains.notes[0]).toContain('« Relance des devis » n’est plus fait aujourd’hui');
+      expect(gains.notes[0]).toContain('effet commercial');
+    });
+
+    it('restent des chantiers de la feuille de route, valorisés par ce qu’elles rattrapent', () => {
+      const diagnostic = avecUneRelanceAbandonnee();
+      const { chantiers } = diapositive(
+        construireDeck(diagnostic, complet('dirigeant')),
+        'FeuilleDeRoute',
+      );
+      const relance = chantiers.find((c) => c.nom === 'Relance des devis');
+
+      expect(chantiers).toHaveLength(2);
+      expect(relance?.valeurGagneeParAn).toStrictEqual(
+        diagnostic.estimation.travailRattrape.parProcessus[0]?.valeurGagneeParAn,
+      );
+    });
+
+    it('n’ajoutent aucune note sans tâche abandonnée', () => {
+      expect(
+        diapositive(construireDeck(deuxProcessus(), complet('dirigeant')), 'GainsAttendus'),
+      ).toMatchObject({
+        travailRattrape: [],
+        notes: [],
+      });
+    });
+  });
+
   describe('options d’hébergement', () => {
     it.each([
       ['dirigeant', 'courte'],

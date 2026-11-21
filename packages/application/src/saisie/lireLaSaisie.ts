@@ -119,6 +119,7 @@ const lireLeProcessus = (
     tauxBas: tauxBas.value,
     tauxHaut: tauxHaut.value,
     coutHoraire: coutHoraire.value,
+    abandonne: saisie.abandonne === true,
   });
   if (!processus.ok) {
     const fautif = processus.error.kind === 'NomDeProcessusVide' ? 'nom' : 'tauxBas';

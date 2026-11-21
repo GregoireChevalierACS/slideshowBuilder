@@ -14,7 +14,8 @@ const NATURES = [
 ] as const;
 
 /**
- * Un diagnostic volontairement chargé : 12 processus aux noms longs, IA, documents, une alerte, et
+ * Un diagnostic volontairement chargé : 12 processus aux noms longs, dont 2 abandonnés, IA,
+ * documents, une alerte, et
  * 3 options d'hébergement aux noms et aux points aussi longs que le domaine le permet.
  */
 const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<string> => {
@@ -49,6 +50,8 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
       donnees: i % 3 === 0 ? 'documents' : 'structurees',
       decisionHumaine: i % 5 === 0 ? 'ponctuelle' : 'aucune',
     },
+    // Les deux derniers ne sont plus faits : la rubrique du travail rattrapé est pleine.
+    ...(i >= 10 ? { abandonne: true } : {}),
   }));
   const revision = await requete.put(`/api/diagnostics/${id}`, {
     data: {

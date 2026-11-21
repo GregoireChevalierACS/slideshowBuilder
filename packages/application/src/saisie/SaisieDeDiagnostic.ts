@@ -44,6 +44,8 @@ export interface SaisieDeProcessus {
   readonly tauxBas: number;
   readonly tauxHaut: number;
   readonly coutHoraire: SaisieDeCoutHoraire;
+  /** La tâche n'est plus faite aujourd'hui. Absent quand elle l'est. */
+  readonly abandonne?: true;
   readonly profil: {
     readonly nature: NatureDeTache;
     readonly source: SaisieDOutil;

@@ -235,6 +235,17 @@ const Gains = ({
           </li>
         ))}
       </ul>
+      {estLaDerniere(partie) && d.travailRattrape.length > 0 && (
+        <p className="travail-rattrape">
+          <strong>En plus, du travail rattrapé</strong> (hors gain) :{' '}
+          {d.travailRattrape
+            .map(
+              ({ processus, tempsNecessaireParAn, tempsRattrapeParAn: { bas, haut } }) =>
+                `${processus}, ${fourchette(bas.enSecondes, haut.enSecondes, enHeures)} par an sur ${enHeures(tempsNecessaireParAn.enSecondes)} qui ne sont plus faites`,
+            )
+            .join(' · ')}
+        </p>
+      )}
     </Cadre>
   );
 };
