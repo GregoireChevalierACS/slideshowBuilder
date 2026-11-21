@@ -33,7 +33,7 @@ const modele = (id: string): ModeleDeProcessus => {
 };
 
 describe('modèles de processus', () => {
-  it('proposent les 13 situations les plus fréquentes chez une PME', () => {
+  it('proposent les 13 situations les plus fréquentes chez une PME, puis 5 propres aux artisans', () => {
     expect(MODELES_DE_PROCESSUS.map((m) => m.nom)).toStrictEqual([
       'Saisie des factures fournisseurs',
       'Relances des impayés',
@@ -48,6 +48,11 @@ describe('modèles de processus', () => {
       'Transmission des variables de paie',
       'Mise à jour du CRM après rendez-vous',
       'Relance des devis non signés',
+      'Réponses aux questions récurrentes des clients',
+      'Fin de chantier : confirmation, facture et demande d’avis',
+      'Dossiers de primes à la rénovation (CEE, MaPrimeRénov’)',
+      'Planning des intervenants',
+      'Mail d’envoi des devis',
     ]);
   });
 
@@ -70,6 +75,55 @@ describe('modèles de processus', () => {
       expect(lireLaSaisie(uneSaisieDeDiagnostic({ processus: [processus] }), 1).ok).toBe(true);
     },
   );
+
+  describe('chez un artisan : facturation et messagerie par e-mail, plateforme et agenda sans accès', () => {
+    const OUTILS = {
+      facturation: outil('Logiciel de facturation', 'facturation', 'email'),
+      messagerie: outil('Messagerie', 'messagerie', 'email'),
+      autre: outil('Plateforme de primes', 'autre', 'aucun'),
+      agenda: outil('Agenda des intervenants', 'agenda', 'aucun'),
+    } as const;
+    const chezUnArtisan = (m: ModeleDeProcessus) => {
+      const pour = (categorie: SaisieDOutil['categorie']) =>
+        categorie === 'facturation' || categorie === 'autre' || categorie === 'agenda'
+          ? OUTILS[categorie]
+          : OUTILS.messagerie;
+      return appliquer(m, {
+        source: pour(m.categorieSource),
+        cible: pour(m.categorieCible),
+        personnes: 1,
+        coutHoraire: { kind: 'Direct', centimesParHeure: 4_000 },
+      });
+    };
+
+    it.each([
+      // Des réponses types à valider : l'IA reconnaît la question, le gérant relit.
+      ['questions-recurrentes', 'assistee', 40, 70],
+      // Des envois déclenchés par la date du chantier, sans décision : entièrement automatisable.
+      ['fin-de-chantier', 'complete', 70, 90],
+      // Une plateforme sans accès : on prépare le dossier, la saisie finale reste humaine.
+      ['dossier-de-prime', 'assistee', 40, 70],
+      // Chaque affectation est une décision : l'outil propose et prévient, le gérant tranche.
+      ['planning-des-intervenants', 'notification', 10, 30],
+      // Le mail est rédigé depuis le devis ; le gérant relit avant d'envoyer.
+      ['mail-d-envoi-des-devis', 'assistee', 40, 70],
+    ] as const)('« %s » : automatisation %s, %i à %i %%', (id, niveau, tauxBas, tauxHaut) => {
+      const processus = chezUnArtisan(modele(id));
+
+      expect(suggererLesTaux(processus.profil)).toStrictEqual({
+        ok: true,
+        value: { niveau, tauxBas, tauxHaut },
+      });
+      expect(processus).toMatchObject({ tauxBas, tauxHaut });
+    });
+
+    it('le mail d’envoi des devis compte environ 300 devis par an (6,5 × 45,6 semaines)', () => {
+      expect(modele('mail-d-envoi-des-devis').frequence).toStrictEqual({
+        nombre: 6.5,
+        periode: 'semaine',
+      });
+    });
+  });
 
   it('signale un outil sans nom', () => {
     expect(
