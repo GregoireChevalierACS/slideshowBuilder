@@ -8,6 +8,7 @@ import {
 } from '../entretien/elementsDeLEntretien.js';
 import { FormulaireDesOptions } from '../entretien/FormulaireDesOptions.js';
 import { FormulaireDuProcessus } from '../entretien/FormulaireDuProcessus.js';
+import { FormulaireDuTheme } from '../entretien/FormulaireDuTheme.js';
 import { PanneauEnDirect } from '../entretien/PanneauEnDirect.js';
 import {
   ajouterUnProcessus,
@@ -117,6 +118,9 @@ export const Entretien = ({
                 modifier({ ...saisie, hypotheses });
               }}
             />
+          )}
+          {selection === 'theme' && (
+            <FormulaireDuTheme saisie={saisie} erreur={erreur} modifier={modifier} />
           )}
           {selection === 'options' && (
             <FormulaireDesOptions saisie={saisie} erreur={erreur} modifier={modifier} />

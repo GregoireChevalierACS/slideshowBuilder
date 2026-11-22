@@ -1,5 +1,6 @@
 import type { AlerteDeCoherence } from '../gains/estimerGains.js';
 import type { Diagnostic } from '../diagnostic/Diagnostic.js';
+import type { Couleur } from '../theme/Couleur.js';
 import { apparier } from './apparier.js';
 import type { Diapositive, ParametresDuDeck } from './Diapositive.js';
 import { ordonnerLesChantiers } from './ordonnerLesChantiers.js';
@@ -15,6 +16,23 @@ const detailTechnique = (p: ParametresDuDeck) => versionComplete(p) && p.public 
 
 const noteDAlerte = (alerte: AlerteDeCoherence, heuresAnnuellesTempsPlein: number): string =>
   `À vérifier avant de présenter : « ${alerte.processus} » représenterait ${String(alerte.heuresParPersonneParAn)} h par personne et par an, plus qu’un temps plein (${String(heuresAnnuellesTempsPlein)} h). La fréquence a peut-être été saisie pour toute l’équipe au lieu d’une personne.`;
+
+/** La couleur affichée, lisible sur fond blanc, et une note si elle diffère de celle saisie. */
+const couleurDuTitre = (
+  saisie: Couleur | undefined,
+): { readonly hex: string | undefined; readonly notes: readonly string[] } => {
+  if (saisie === undefined) return { hex: undefined, notes: [] };
+  const lisible = saisie.lisibleSurBlanc();
+  return {
+    hex: lisible.hex,
+    notes:
+      lisible.hex === saisie.hex
+        ? []
+        : [
+            `La couleur du prospect (${saisie.hex}) a été assombrie en ${lisible.hex} pour rester lisible sur fond blanc.`,
+          ],
+  };
+};
 
 /** L'effet commercial d'une tâche reprise se dit, il ne se chiffre pas dans le calcul. */
 const noteDeTravailRattrape = (processus: string): string =>
@@ -53,6 +71,7 @@ export const construireDeck = (
   const { estimation, architecture, hypotheses, prospect, coutDesOptions } = diagnostic;
   const { total } = estimation;
   const sansNotes = { notes: [] } as const;
+  const couleur = couleurDuTitre(diagnostic.theme.couleur);
 
   const sections: readonly Section[] = [
     {
@@ -64,10 +83,15 @@ export const construireDeck = (
           prospect: prospect.nom,
           date: diagnostic.dateDEntretien.enToutesLettres,
           version: diagnostic.version,
+          couleur: couleur.hex,
+          logo: diagnostic.theme.logo?.urlDeDonnees,
           // Le présentateur voit les alertes avant de commencer, le client jamais.
-          notes: estimation.alertes.map((alerte) =>
-            noteDAlerte(alerte, hypotheses.heuresAnnuellesTempsPlein),
-          ),
+          notes: [
+            ...estimation.alertes.map((alerte) =>
+              noteDAlerte(alerte, hypotheses.heuresAnnuellesTempsPlein),
+            ),
+            ...couleur.notes,
+          ],
         },
       ],
     },

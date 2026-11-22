@@ -282,7 +282,7 @@ describe('cas d’usage', () => {
     it('exporte l’historique complet d’un diagnostic, daté du jour', () => {
       const exporte = exportDe(2);
 
-      expect(exporte).toMatchObject({ exporteLe: '2026-10-30', versionDuFormat: 4 });
+      expect(exporte).toMatchObject({ exporteLe: '2026-10-30', versionDuFormat: 5 });
       expect(exporte.diagnostics.map((d) => d.versions.map((v) => v.version))).toStrictEqual([
         [1, 2, 3],
       ]);

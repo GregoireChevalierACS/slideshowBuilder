@@ -17,6 +17,9 @@ import { Montant } from '../gains/Montant.js';
 import { Pourcentage } from '../gains/Pourcentage.js';
 import { ProcessusRedondant } from '../gains/ProcessusRedondant.js';
 import { OptionDeDeploiement } from '../solution/OptionDeDeploiement.js';
+import { Couleur } from '../theme/Couleur.js';
+import { Logo } from '../theme/Logo.js';
+import type { ThemeDuProspect } from '../theme/ThemeDuProspect.js';
 
 /** Extrait la valeur d'un résultat dont le test garantit le succès. */
 export const valeurDe = <T, E>(resultat: Result<T, E>): T => {
@@ -103,6 +106,7 @@ export const unDiagnostic = (
   processus: readonly ProcessusDuDiagnostic[] = [unProcessusDuDiagnostic()],
   prospect: Parameters<typeof Prospect.creer>[0] = { nom: 'Négoce Durand' },
   options: readonly OptionDeDeploiement[] = [],
+  theme: ThemeDuProspect = {},
 ): Diagnostic =>
   valeurDe(
     Diagnostic.creer({
@@ -111,6 +115,7 @@ export const unDiagnostic = (
       hypotheses: desHypotheses(),
       processus,
       options,
+      theme,
     }),
   );
 
@@ -142,4 +147,14 @@ export const uneOption = ({
       inclus,
       limites,
     }),
+  );
+
+export const uneCouleur = (hex: string): Couleur => valeurDe(Couleur.depuisHex(hex));
+
+/** Une image PNG d'un pixel, en URL de données. */
+export const unLogo = (): Logo =>
+  valeurDe(
+    Logo.depuisUrlDeDonnees(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    ),
   );

@@ -67,6 +67,19 @@ const decrireLOption = (option: OptionDeDeploiement): SaisieDOption => ({
   limites: option.limites,
 });
 
+/** Sans couleur ni logo, le champ reste absent, comme avant les thèmes. */
+const decrireLeTheme = ({
+  theme: { couleur, logo },
+}: Diagnostic): Pick<SaisieDeDiagnostic, 'theme'> =>
+  couleur === undefined && logo === undefined
+    ? {}
+    : {
+        theme: {
+          ...(couleur === undefined ? {} : { couleur: couleur.hex }),
+          ...(logo === undefined ? {} : { logo: logo.urlDeDonnees }),
+        },
+      };
+
 /** L'inverse de `lireLaSaisie` : décrire un diagnostic lu redonne exactement sa saisie. */
 export const decrireLeDiagnostic = (diagnostic: Diagnostic): SaisieDeDiagnostic => {
   const { nom, secteur, effectifTotal } = diagnostic.prospect;
@@ -89,5 +102,6 @@ export const decrireLeDiagnostic = (diagnostic: Diagnostic): SaisieDeDiagnostic 
     processus: diagnostic.processus.map(decrireLeProcessus),
     // Sans option, le champ reste absent : les saisies d'avant les options sont inchangées.
     ...(diagnostic.options.length === 0 ? {} : { options: diagnostic.options.map(decrireLOption) }),
+    ...decrireLeTheme(diagnostic),
   };
 };

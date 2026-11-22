@@ -156,16 +156,39 @@ export const enFrequenceReguliere = (frequence: SaisieDeFrequence): SaisieDeFreq
 
 const optionsDe = (saisie: SaisieDeDiagnostic) => saisie.options ?? [];
 
-/** Sans option, le champ disparaît de la saisie (comme avant les options). */
+type Theme = NonNullable<SaisieDeDiagnostic['theme']>;
+
+/**
+ * La saisie avec ses champs facultatifs remplacés, chacun absent quand il est vide (comme avant
+ * qu'il existe). Seul endroit qui énumère les champs : un champ facultatif ajouté à la saisie doit
+ * être repris ici, sinon une modification ailleurs l'effacerait (les tests le vérifient).
+ */
+const recomposer = (
+  saisie: SaisieDeDiagnostic,
+  options: readonly SaisieDOption[] | undefined,
+  theme: Theme | undefined,
+): SaisieDeDiagnostic => {
+  const { prospect, dateDEntretien, hypotheses, processus } = saisie;
+  return {
+    prospect,
+    dateDEntretien,
+    hypotheses,
+    processus,
+    ...(options === undefined || options.length === 0 ? {} : { options }),
+    ...(theme === undefined || (theme.couleur === undefined && theme.logo === undefined)
+      ? {}
+      : { theme }),
+  };
+};
+
 export const avecLesOptions = (
   saisie: SaisieDeDiagnostic,
   options: readonly SaisieDOption[],
-): SaisieDeDiagnostic => {
-  // Champ par champ : un nouveau champ obligatoire de la saisie ne compilerait pas sans être repris.
-  const { prospect, dateDEntretien, hypotheses, processus } = saisie;
-  const sansOptions = { prospect, dateDEntretien, hypotheses, processus };
-  return options.length === 0 ? sansOptions : { ...sansOptions, options };
-};
+): SaisieDeDiagnostic => recomposer(saisie, options, saisie.theme);
+
+/** Sans couleur ni logo, le thème disparaît de la saisie. */
+export const avecLeTheme = (saisie: SaisieDeDiagnostic, theme: Theme): SaisieDeDiagnostic =>
+  recomposer(saisie, saisie.options, theme);
 
 /** Ajoute une option à partir d'un modèle, sous un nom libre (le domaine refuse les doublons). */
 export const ajouterUneOption = (

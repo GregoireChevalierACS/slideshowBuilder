@@ -1,7 +1,7 @@
 import type { SaisieDeDiagnostic } from '@slideshow/application';
 import { uneSaisieDeDiagnostic, uneSaisieDeProcessus } from '@slideshow/application/testing';
 import { err, ok } from '@slideshow/domain';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { ClientDeLApi, ErreurDApi } from '../api/clientDeLApi.js';
@@ -395,6 +395,67 @@ describe('Entretien', () => {
     await waitFor(() => {
       expect(etat.saisie.processus[0]).not.toHaveProperty('abandonne');
     });
+  });
+
+  it('donne à la page de titre la couleur et le logo du prospect', async () => {
+    const { client, etat } = unFauxServeur();
+    await afficher(client);
+    await userEvent.click(screen.getByRole('button', { name: 'Thème de la présentation' }));
+    const formulaire = within(screen.getByRole('form', { name: 'Thème de la présentation' }));
+
+    // Un jaune vif, illisible sur fond blanc : la page de titre l'affiche assombri.
+    fireEvent.change(formulaire.getByLabelText('Couleur principale'), {
+      target: { value: '#ffd400' },
+    });
+    expect(
+      formulaire.getByText('Assombrie en #8c7500 pour rester lisible sur fond blanc.'),
+    ).toBeInTheDocument();
+    // Un bleu déjà lisible est gardé tel quel.
+    fireEvent.change(formulaire.getByLabelText('Couleur principale'), {
+      target: { value: '#1f5fbf' },
+    });
+    expect(formulaire.queryByText(/Assombrie en/)).not.toBeInTheDocument();
+    fireEvent.change(formulaire.getByLabelText('Couleur principale'), {
+      target: { value: '#ffd400' },
+    });
+    await userEvent.upload(
+      formulaire.getByLabelText('Logo (PNG, JPEG ou WebP)'),
+      new File([new Uint8Array([1, 2, 3])], 'logo.png', { type: 'image/png' }),
+    );
+
+    expect(await formulaire.findByRole('img', { name: 'Logo de Négoce Durand' })).toHaveAttribute(
+      'src',
+      'data:image/png;base64,AQID',
+    );
+    await waitFor(() => {
+      expect(etat.saisie.theme).toStrictEqual({
+        couleur: '#ffd400',
+        logo: 'data:image/png;base64,AQID',
+      });
+    });
+
+    await userEvent.click(formulaire.getByRole('button', { name: 'Sans couleur' }));
+    await userEvent.click(formulaire.getByRole('button', { name: 'Retirer le logo' }));
+    await waitFor(() => {
+      expect(etat.saisie).not.toHaveProperty('theme');
+    });
+  });
+
+  it('refuse un logo dans un autre format, et ignore une sélection annulée', async () => {
+    await afficher(unFauxServeur().client);
+    await userEvent.click(screen.getByRole('button', { name: 'Thème de la présentation' }));
+    const formulaire = within(screen.getByRole('form', { name: 'Thème de la présentation' }));
+    const champ = formulaire.getByLabelText('Logo (PNG, JPEG ou WebP)');
+
+    fireEvent.change(champ, { target: { files: null } });
+    // Le navigateur filtre par type ; un fichier glissé ou renommé peut quand même passer.
+    fireEvent.change(champ, {
+      target: { files: [new File(['<svg/>'], 'logo.svg', { type: 'image/svg+xml' })] },
+    });
+
+    expect(await formulaire.findByRole('alert')).toHaveTextContent('Une image PNG, JPEG ou WebP.');
+    // Pas d'aperçu tant que la saisie est refusée.
+    expect(formulaire.queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('compare des options d’hébergement, chiffrées en direct', async () => {

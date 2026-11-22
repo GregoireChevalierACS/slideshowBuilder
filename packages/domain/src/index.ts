@@ -84,3 +84,6 @@ export {
   type DescriptionDOption,
   type OptionInvalide,
 } from './solution/OptionDeDeploiement.js';
+export { CONTRASTE_MINIMAL, Couleur, type CouleurInvalide } from './theme/Couleur.js';
+export { Logo, TAILLE_MAXIMALE_DU_LOGO, type LogoInvalide } from './theme/Logo.js';
+export type { ThemeDuProspect } from './theme/ThemeDuProspect.js';
