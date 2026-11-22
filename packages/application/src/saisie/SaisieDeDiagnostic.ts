@@ -83,4 +83,6 @@ export interface SaisieDeDiagnostic {
   readonly processus: readonly SaisieDeProcessus[];
   /** Absent quand aucune option n'est à comparer. */
   readonly options?: readonly SaisieDOption[];
+  /** Couleur (« #1f5fbf ») et logo (URL de données) du prospect. Absent sans thème. */
+  readonly theme?: { readonly couleur?: string; readonly logo?: string };
 }

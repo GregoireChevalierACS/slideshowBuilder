@@ -9,6 +9,7 @@ import type { HypothesesDeCalcul } from '../gains/HypothesesDeCalcul.js';
 import type { ProcessusRedondant } from '../gains/ProcessusRedondant.js';
 import { chiffrerLesOptions, type CoutDUneOption } from '../solution/chiffrerLesOptions.js';
 import type { OptionDeDeploiement } from '../solution/OptionDeDeploiement.js';
+import type { ThemeDuProspect } from '../theme/ThemeDuProspect.js';
 import type { DateLocale } from './DateLocale.js';
 import type { Prospect } from './Prospect.js';
 
@@ -34,6 +35,8 @@ export interface ContenuDuDiagnostic {
   readonly processus: readonly ProcessusDuDiagnostic[];
   /** Les façons d'héberger la solution, à comparer. Aucune par défaut. */
   readonly options?: readonly OptionDeDeploiement[];
+  /** Couleur et logo du prospect sur la page de titre. Aucun par défaut. */
+  readonly theme?: ThemeDuProspect;
 }
 
 /** Les noms servent de repères dans l'architecture : deux processus ne peuvent pas se confondre. */
@@ -58,6 +61,7 @@ export class Diagnostic implements ContenuDuDiagnostic {
   readonly hypotheses: HypothesesDeCalcul;
   readonly processus: readonly ProcessusDuDiagnostic[];
   readonly options: readonly OptionDeDeploiement[];
+  readonly theme: ThemeDuProspect;
 
   private constructor(
     contenu: ContenuDuDiagnostic,
@@ -68,6 +72,7 @@ export class Diagnostic implements ContenuDuDiagnostic {
     this.hypotheses = contenu.hypotheses;
     this.processus = contenu.processus;
     this.options = contenu.options ?? [];
+    this.theme = contenu.theme ?? {};
   }
 
   static creer(contenu: ContenuDuDiagnostic): Result<Diagnostic, DiagnosticInvalide> {
@@ -134,6 +139,7 @@ export class Diagnostic implements ContenuDuDiagnostic {
       hypotheses: this.hypotheses,
       processus: this.processus,
       options: this.options,
+      theme: this.theme,
     };
   }
 }

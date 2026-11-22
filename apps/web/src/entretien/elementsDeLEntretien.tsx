@@ -5,7 +5,7 @@ import { messageDuChamp } from './affichage.js';
 import { ChampNumerique, Section } from './champs.js';
 import type { EtatDeSauvegarde } from './useEntretien.js';
 
-export type Selection = number | 'hypotheses' | 'options';
+export type Selection = number | 'hypotheses' | 'options' | 'theme';
 
 export const ListeDesProcessus = ({
   noms,
@@ -56,6 +56,15 @@ export const ListeDesProcessus = ({
         }}
       >
         Options d’hébergement
+      </button>
+      <button
+        type="button"
+        aria-current={selection === 'theme'}
+        onClick={() => {
+          choisir('theme');
+        }}
+      >
+        Thème de la présentation
       </button>
     </nav>
   );

@@ -28,6 +28,10 @@ export interface DiapositiveTitre extends AvecNotes {
   readonly prospect: string;
   readonly date: string;
   readonly version: number;
+  /** La couleur du prospect, assombrie s'il le faut pour rester lisible sur fond blanc. */
+  readonly couleur: string | undefined;
+  /** URL de données de l'image. */
+  readonly logo: string | undefined;
 }
 
 export interface DiapositiveObservation extends AvecNotes {

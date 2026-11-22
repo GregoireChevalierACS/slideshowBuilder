@@ -28,7 +28,7 @@ const unHistorique = (id: string, ...saisies: SaisieDeDiagnostic[]) => {
 
 const unExport = (diagnostics: readonly unknown[]) => ({
   format: 'slideshow-builder/diagnostics',
-  versionDuFormat: 4,
+  versionDuFormat: 5,
   exporteLe: '2026-10-30',
   diagnostics,
 });
@@ -111,9 +111,9 @@ describe('export de diagnostics', () => {
     });
 
     it('exporté par une version plus récente de l’application', () => {
-      expect(lireUnExport({ ...unExport([]), versionDuFormat: 5 })).toStrictEqual({
+      expect(lireUnExport({ ...unExport([]), versionDuFormat: 6 })).toStrictEqual({
         ok: false,
-        error: { kind: 'FormatTropRecent', versionDuFormat: 5 },
+        error: { kind: 'FormatTropRecent', versionDuFormat: 6 },
       });
     });
 

@@ -374,6 +374,24 @@ label.interrupteur {
   margin: auto 0;
 }
 
+.diapositive-titre .logo-du-prospect {
+  display: block;
+  max-height: 9cqw;
+  max-width: 30cqw;
+  object-fit: contain;
+  margin-bottom: 3cqw;
+}
+
+.apercu-du-titre {
+  max-width: 480px;
+  border: 1px solid var(--bordure);
+}
+
+.formulaire-du-theme {
+  display: grid;
+  gap: 12px;
+}
+
 .diapositive-titre h1 {
   font-size: 5.5cqw;
   line-height: 1.1;

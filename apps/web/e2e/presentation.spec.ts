@@ -59,6 +59,11 @@ const preparerUnDiagnosticCharge = async (requete: APIRequestContext): Promise<s
       prospect: { nom: 'Société de négoce de matériaux Durand et fils' },
       hypotheses: { joursTravaillesParAn: 228, heuresAnnuellesTempsPlein: 1_607 },
       processus,
+      // Un jaune vif, que le domaine assombrit, et un logo (une image PNG d'un pixel).
+      theme: {
+        couleur: '#ffd400',
+        logo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      },
       // Noms et points aussi nombreux et aussi longs que le domaine le permet (40 caractères).
       options: [
         'Au bureau, sur un mini-serveur à vous',

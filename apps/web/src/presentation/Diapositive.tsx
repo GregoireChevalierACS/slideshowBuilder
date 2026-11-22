@@ -56,8 +56,14 @@ const Cadre = ({
 
 const Titre = ({ d }: { readonly d: DiapositiveTitre }) => (
   <div className="diapositive-titre">
-    <h1>{d.titre}</h1>
-    <p className="prospect">{d.prospect}</p>
+    {d.logo !== undefined && (
+      <img className="logo-du-prospect" src={d.logo} alt={`Logo de ${d.prospect}`} />
+    )}
+    {/* La couleur du prospect, déjà rendue lisible par le domaine ; sinon, celle de l'application. */}
+    <h1 style={{ borderBottomColor: d.couleur }}>{d.titre}</h1>
+    <p className="prospect" style={{ color: d.couleur }}>
+      {d.prospect}
+    </p>
     <p className="date">{d.date}</p>
   </div>
 );

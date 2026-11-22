@@ -316,3 +316,35 @@ describe('DiapositiveAffichee : travail rattrapé', () => {
     expect(pages.map((p) => texte(p).includes('travail rattrapé'))).toStrictEqual([false, true]);
   });
 });
+
+describe('DiapositiveAffichee : thème du prospect', () => {
+  const titre = (theme: { couleur?: string; logo?: string }) => {
+    const lu = lireLaSaisie(uneSaisieDeDiagnostic({ theme }), 1);
+    if (!lu.ok) throw new Error('saisie de test invalide');
+    return page(
+      pagesDuDeck(construireDeck(lu.value, { public: 'dirigeant', duree: 'courte' })),
+      'Titre',
+    );
+  };
+
+  it('affiche le logo et la couleur du prospect sur la page de titre', () => {
+    render(
+      <DiapositiveAffichee
+        page={titre({ couleur: '#1f5fbf', logo: 'data:image/png;base64,AAAA' })}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'Logo de Négoce Durand' })).toHaveAttribute(
+      'src',
+      'data:image/png;base64,AAAA',
+    );
+    expect(screen.getByText('Négoce Durand')).toHaveStyle({ color: '#1f5fbf' });
+  });
+
+  it('se passe de logo et de couleur', () => {
+    render(<DiapositiveAffichee page={titre({})} />);
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getByText('Négoce Durand').getAttribute('style')).toBeNull();
+  });
+});

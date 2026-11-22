@@ -11,6 +11,8 @@ import {
   ajouterUnProcessus,
   appliquerUnModele,
   avecAbandon,
+  avecLeTheme,
+  avecLesOptions,
   enFrequenceReguliere,
   enFrequenceSaisonniere,
   nomLibre,
@@ -323,5 +325,25 @@ describe('tâche abandonnée', () => {
 
     expect(abandonnee).toStrictEqual({ ...faite, abandonne: true });
     expect(avecAbandon(abandonnee, false)).toStrictEqual(faite);
+  });
+});
+
+describe('champs facultatifs de la saisie', () => {
+  const theme = { couleur: '#1f5fbf', logo: 'data:image/png;base64,AAAA' };
+  const option = MODELES_D_OPTIONS[0]?.saisie;
+
+  it('modifier les options garde le thème, et modifier le thème garde les options', () => {
+    if (option === undefined) throw new Error('modèle d’option absent');
+    const complete = avecLeTheme(avecLesOptions(uneSaisieDeDiagnostic(), [option]), theme);
+
+    expect(complete).toMatchObject({ options: [option], theme });
+    expect(avecLesOptions(complete, []).theme).toStrictEqual(theme);
+    expect(avecLeTheme(complete, {}).options).toStrictEqual([option]);
+  });
+
+  it('retire un thème sans couleur ni logo', () => {
+    expect(avecLeTheme(avecLeTheme(uneSaisieDeDiagnostic(), theme), {})).toStrictEqual(
+      uneSaisieDeDiagnostic(),
+    );
   });
 });

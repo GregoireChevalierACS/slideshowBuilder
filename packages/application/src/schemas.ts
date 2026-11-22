@@ -124,6 +124,13 @@ export const schemaDesModifications = z.strictObject({
   }),
   processus: z.array(schemaDeProcessus).max(100),
   options: z.array(schemaDOption).max(10).exactOptional(),
+  theme: z
+    .strictObject({
+      couleur: z.string().max(20).exactOptional(),
+      // Le domaine en vérifie le format et la taille ; ici, une borne de sécurité.
+      logo: z.string().max(300_000).exactOptional(),
+    })
+    .exactOptional(),
 });
 
 export const schemaDeSaisieDeDiagnostic = schemaDesModifications.extend({
@@ -149,9 +156,9 @@ export const schemaDeVersion = z.strictObject({
 export const FORMAT_D_EXPORT = 'slideshow-builder/diagnostics';
 /**
  * 2 : fréquences saisonnières et semaines de pointe. 3 : options d'hébergement. 4 : tâches
- * abandonnées. Les fichiers des versions précédentes restent lisibles.
+ * abandonnées. 5 : thème du prospect. Les fichiers des versions précédentes restent lisibles.
  */
-export const VERSION_DU_FORMAT_D_EXPORT = 4;
+export const VERSION_DU_FORMAT_D_EXPORT = 5;
 
 /** Un fichier d'export : l'historique complet de chaque diagnostic, version par version. */
 export const schemaDExport = z.strictObject({
@@ -160,6 +167,7 @@ export const schemaDExport = z.strictObject({
     z.literal(1),
     z.literal(2),
     z.literal(3),
+    z.literal(4),
     z.literal(VERSION_DU_FORMAT_D_EXPORT),
   ]),
   exporteLe: z.string(),

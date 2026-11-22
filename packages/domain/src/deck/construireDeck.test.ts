@@ -2,6 +2,8 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
   unDiagnostic,
+  uneCouleur,
+  unLogo,
   uneOption,
   unOutil,
   unProcessusDuDiagnostic,
@@ -205,8 +207,36 @@ describe('construireDeck', () => {
         prospect: 'Négoce Durand',
         date: '26 octobre 2026',
         version: 2,
+        couleur: undefined,
+        logo: undefined,
         notes: [],
       });
+    });
+
+    it('titre : la couleur et le logo du prospect', () => {
+      const diagnostic = unDiagnostic(deuxProcessus().processus, { nom: 'Négoce Durand' }, [], {
+        couleur: uneCouleur('#1f5fbf'),
+        logo: unLogo(),
+      });
+
+      expect(diapositive(construireDeck(diagnostic, complet('dirigeant')), 'Titre')).toMatchObject({
+        couleur: '#1f5fbf',
+        logo: unLogo().urlDeDonnees,
+        notes: [],
+      });
+    });
+
+    it('titre : une couleur trop claire est assombrie, et le présentateur en est prévenu', () => {
+      const diagnostic = unDiagnostic(deuxProcessus().processus, { nom: 'Négoce Durand' }, [], {
+        couleur: uneCouleur('#ffd400'),
+      });
+      const titre = diapositive(construireDeck(diagnostic, complet('dirigeant')), 'Titre');
+      const lisible = uneCouleur('#ffd400').lisibleSurBlanc().hex;
+
+      expect(titre.couleur).toBe(lisible);
+      expect(titre.notes).toStrictEqual([
+        `La couleur du prospect (#ffd400) a été assombrie en ${lisible} pour rester lisible sur fond blanc.`,
+      ]);
     });
 
     it('observation : secteur, effectif, outils et processus relevés', () => {

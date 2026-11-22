@@ -220,6 +220,33 @@ describe('lireLaSaisie', () => {
     });
   });
 
+  describe('thème du prospect', () => {
+    it('n’en lit aucun quand le champ est absent', () => {
+      expect(lu(uneSaisieDeDiagnostic()).theme).toStrictEqual({});
+    });
+
+    it('lit la couleur et le logo', () => {
+      const theme = lu(
+        uneSaisieDeDiagnostic({
+          theme: { couleur: '#1F5FBF', logo: 'data:image/png;base64,AAAA' },
+        }),
+      ).theme;
+
+      expect(theme.couleur?.hex).toBe('#1f5fbf');
+      expect(theme.logo?.urlDeDonnees).toBe('data:image/png;base64,AAAA');
+    });
+
+    it.each([
+      [{ couleur: 'bleu' }, 'theme.couleur', 'CouleurInvalide'],
+      [{ logo: 'data:image/svg+xml;base64,AAAA' }, 'theme.logo', 'FormatDeLogoRefuse'],
+    ] as const)('%o → %s', (theme, champ, kind) => {
+      expect(lireLaSaisie(uneSaisieDeDiagnostic({ theme }), 1)).toMatchObject({
+        ok: false,
+        error: { kind: 'SaisieInvalide', champ, erreur: { kind } },
+      });
+    });
+  });
+
   describe('options d’hébergement', () => {
     const uneSaisieDOption = (surcharges: Partial<SaisieDOption> = {}): SaisieDOption => ({
       nom: 'Au bureau',
@@ -402,10 +429,20 @@ describe('lireLaSaisie', () => {
                 ),
                 { maxLength: 3 },
               ),
+              // Un thème sans couleur ni logo n'existe pas : le champ est alors absent.
+              fc.option(
+                fc.oneof(
+                  fc.constant({ couleur: '#1f5fbf' }),
+                  fc.constant({ logo: 'data:image/png;base64,AAAA' }),
+                  fc.constant({ couleur: '#ffd400', logo: 'data:image/webp;base64,AAAA' }),
+                ),
+                { nil: undefined },
+              ),
             )
-            .map(([semainesDePointe, options]) =>
+            .map(([semainesDePointe, options, theme]) =>
               uneSaisieDeDiagnostic({
                 processus: liste,
+                ...(theme === undefined ? {} : { theme }),
                 // Sans option, le champ est absent, comme les semaines de pointe.
                 ...(options.length === 0
                   ? {}

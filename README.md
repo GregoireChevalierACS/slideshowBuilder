@@ -24,6 +24,8 @@ pnpm start            # lance l'application sur http://127.0.0.1:4321
 
 Pour comparer les façons d'héberger la solution, la section **Options d'hébergement** de l'entretien accepte jusqu'à trois options (au bureau, dans le cloud…) : mise en place, matériel, frais mensuels, ce qui est inclus et les limites. Le deck les compare juste après les gains, en coût sur 3 ans et en coût par heure récupérée.
 
+La section **Thème de la présentation** met la couleur et le logo du prospect sur la page de titre. Une couleur trop claire est assombrie automatiquement pour rester lisible.
+
 Depuis l'écran d'entretien, **Présenter ▸** ouvre l'écran de lancement : choisir le public, la durée et la version, puis **Entrée** pour le plein écran (`→`, `Espace` ou `Page suivante` pour avancer, `←` pour revenir, `Échap` pour quitter). **Ouvrir la vue présentateur** affiche dans une seconde fenêtre les notes, la diapositive suivante et un chronomètre. **Exporter en PDF** ouvre l'impression du navigateur : choisir « Enregistrer en PDF » (une diapositive par page).
 
 ### Sauvegarder et changer de poste

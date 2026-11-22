@@ -1,4 +1,5 @@
 import {
+  Couleur,
   CoutHoraire,
   DateLocale,
   Diagnostic,
@@ -7,6 +8,7 @@ import {
   err,
   Frequence,
   HypothesesDeCalcul,
+  Logo,
   Montant,
   ok,
   OptionDeDeploiement,
@@ -15,6 +17,9 @@ import {
   ProcessusRedondant,
   Prospect,
   type CoefficientDeChargesInvalide,
+  type CouleurInvalide,
+  type LogoInvalide,
+  type ThemeDuProspect,
   type DateInvalide,
   type DiagnosticInvalide,
   type DureeInvalide,
@@ -40,12 +45,14 @@ import type {
 
 export type ErreurDuDomaine =
   | CoefficientDeChargesInvalide
+  | CouleurInvalide
   | DateInvalide
   | DiagnosticInvalide
   | DureeInvalide
   | EffectifInvalide
   | FrequenceInvalide
   | HypothesesInvalides
+  | LogoInvalide
   | MontantInvalide
   | OptionInvalide
   | OutilInvalide
@@ -193,6 +200,21 @@ const lireLesOptions = (saisies: readonly SaisieDOption[]): Lecture<OptionDeDepl
   return ok(lues);
 };
 
+const lireLeTheme = ({
+  couleur,
+  logo,
+}: NonNullable<SaisieDeDiagnostic['theme']>): Lecture<ThemeDuProspect> => {
+  const couleurLue =
+    couleur === undefined ? undefined : au('theme.couleur', Couleur.depuisHex(couleur));
+  if (couleurLue?.ok === false) return couleurLue;
+  const logoLu = logo === undefined ? undefined : au('theme.logo', Logo.depuisUrlDeDonnees(logo));
+  if (logoLu?.ok === false) return logoLu;
+  return ok({
+    ...(couleurLue === undefined ? {} : { couleur: couleurLue.value }),
+    ...(logoLu === undefined ? {} : { logo: logoLu.value }),
+  });
+};
+
 const lireLeProspect = (saisie: SaisieDeDiagnostic['prospect']): Lecture<Prospect> => {
   const { nom, secteur, effectifTotal } = saisie;
   const identite = secteur === undefined ? { nom } : { nom, secteur };
@@ -217,6 +239,8 @@ export const lireLaSaisie = (saisie: SaisieDeDiagnostic, version: number): Lectu
   if (!processus.ok) return processus;
   const options = lireLesOptions(saisie.options ?? []);
   if (!options.ok) return options;
+  const theme = lireLeTheme(saisie.theme ?? {});
+  if (!theme.ok) return theme;
 
   const diagnostic = Diagnostic.restaurer(
     {
@@ -225,6 +249,7 @@ export const lireLaSaisie = (saisie: SaisieDeDiagnostic, version: number): Lectu
       hypotheses: hypotheses.value,
       processus: processus.value,
       options: options.value,
+      theme: theme.value,
     },
     version,
   );
