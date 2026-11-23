@@ -165,6 +165,37 @@ for (const publicVise of ['dirigeant', 'technique'] as const) {
   });
 }
 
+/** Les diapositives réduites (aperçu, vue présentateur) dont le contenu déborde de leur cadre. */
+const reductionsQuiDebordent = (page: Page, selecteur: string) =>
+  page.locator(selecteur).evaluateAll((diapositives) =>
+    diapositives
+      .filter((d) => {
+        const deborde = (e: Element) =>
+          e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1;
+        return [d, ...d.querySelectorAll('.contenu-de-diapositive')].some(deborde);
+      })
+      .map((d) => d.getAttribute('class') ?? ''),
+  );
+
+test('les miniatures sont de vraies réductions : rien ne déborde de son cadre', async ({
+  page,
+  request,
+}) => {
+  // Les tailles en cqw doivent se mesurer sur la diapositive, pas sur la fenêtre : sinon, le texte
+  // d'une miniature est aussi grand qu'en plein écran.
+  const id = await preparerUnDiagnosticCharge(request);
+  await page.goto(`/#/diagnostics/${id}/presentation?public=technique&duree=complete`);
+  await expect(page.getByRole('heading', { name: /^Présenter/ })).toBeVisible();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  expect(await reductionsQuiDebordent(page, '.apercu .diapositive')).toStrictEqual([]);
+
+  await page.goto(`/#/diagnostics/${id}/presentateur?public=technique&duree=complete`);
+  await expect(page.getByRole('region', { name: 'Diapositive suivante' })).toBeVisible();
+  expect(await reductionsQuiDebordent(page, '.vues .diapositive')).toStrictEqual([]);
+});
+
 test('le PDF contient une page par diapositive, et aucune note du présentateur', async ({
   page,
   request,
