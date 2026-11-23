@@ -57,9 +57,35 @@ const page = (pages: readonly Page[], kind: Diapositive['kind'], numero = 0): Pa
 const texte = (p: Page) => lisible(render(<DiapositiveAffichee page={p} />).container.textContent);
 
 describe('DiapositiveAffichee', () => {
+  it('annonce la rubrique au-dessus du titre, et numérote la diapositive en présentation', () => {
+    render(
+      <DiapositiveAffichee
+        page={page(unDeck(), 'TableauDesProcessus')}
+        pied={{ prospect: 'Négoce Durand', numero: 4, total: 9 }}
+      />,
+    );
+
+    expect(screen.getByText('Le constat')).toHaveClass('rubrique');
+    expect(screen.getByRole('contentinfo')).toHaveTextContent(
+      'Négoce Durand · Diagnostic d’automatisation4 / 9',
+    );
+  });
+
+  it('n’a pas de pied de page sur la page de titre, ni dans un aperçu isolé', () => {
+    render(
+      <DiapositiveAffichee
+        page={page(unDeck(), 'Titre')}
+        pied={{ prospect: 'Négoce Durand', numero: 1, total: 9 }}
+      />,
+    );
+    render(<DiapositiveAffichee page={page(unDeck(), 'CoutCache')} />);
+
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
+  });
+
   it('titre : la promesse, le prospect et la date', () => {
     expect(texte(page(unDeck(), 'Titre'))).toBe(
-      'Automatiser vos tâches répétitivesNégoce Durand27 octobre 2026',
+      'Diagnostic d’automatisationAutomatiser vos tâches répétitivesNégoce Durand27 octobre 2026',
     );
   });
 
@@ -142,7 +168,7 @@ describe('DiapositiveAffichee', () => {
     const contenu = texte(page(unDeck(), 'SolutionDUnProcessus', 1));
 
     expect(contenu).toContain('Relances 1');
-    expect(contenu).toContain('automatisation complète · 70 à 90 % du temps gagné');
+    expect(contenu).toContain('automatisation complète 70 à 90 % du temps gagné');
     expect(contenu).toContain('Planificateur — la tâche est une relance ou un reporting');
   });
 
@@ -157,7 +183,7 @@ describe('DiapositiveAffichee', () => {
       Number.parseFloat(barres[1]?.style.width ?? ''),
     );
     expect(lisible(document.querySelector('.sous-titre')?.textContent ?? '')).toMatch(
-      /^par an, soit 0,\d\d ETP à 0,\d\d ETP libérés$/,
+      /^par an, soit 0,\d\d ETP à 0,\d\d ETP libérés +estimation prudente +optimiste$/,
     );
   });
 
@@ -247,8 +273,10 @@ describe('DiapositiveAffichee : options d’hébergement', () => {
     const contenu = texte(options([uneOption('Au bureau'), uneOption('Dans le cloud')]));
 
     expect(contenu).toContain('Deux façons de l’héberger');
-    expect(contenu).toContain('Pour 426 h à 547 h gagnées par an, comparées sur 3 ans');
-    expect(contenu).toContain('Au bureau2,36 €/h à 3,60 €/hpar heure récupérée');
+    expect(contenu).toContain(
+      'Coût par heure récupérée sur 3 ans, pour 426 h à 547 h gagnées par an',
+    );
+    expect(contenu).toContain('Au bureau2,36 €/h à 3,60 €/hSur 3 ans');
     expect(contenu).toContain('Sur 3 ans3 880 € à 4 600 €La première année3 160 € à 3 400 €');
     expect(contenu).toContain('Serveur dans vos locauxDépend de votre connexion');
   });

@@ -88,6 +88,7 @@ export const Presentateur = ({
     deck.pages.slice(courante + 1, courante + 2),
   ];
   const notes = actuelle.flatMap((page) => page.diapositive.notes);
+  const pied = (numero: number) => ({ prospect: deck.prospect, numero: numero + 1, total: nombre });
 
   return (
     <main className="presentateur">
@@ -109,16 +110,20 @@ export const Presentateur = ({
         </button>
       </header>
       <div className="vues">
-        <section aria-label="Diapositive affichée">
+        <section aria-label="Diapositive affichée" className="vue-courante">
+          <h2 className="intitule">Maintenant</h2>
           {actuelle.map((page) => (
-            <DiapositiveAffichee key={courante} page={page} />
+            <DiapositiveAffichee key={courante} page={page} pied={pied(courante)} />
           ))}
         </section>
-        <section aria-label="Diapositive suivante">
+        <section aria-label="Diapositive suivante" className="vue-suivante">
+          <h2 className="intitule">Ensuite</h2>
           {suivante.length === 0 ? (
             <p>Fin de la présentation.</p>
           ) : (
-            suivante.map((page) => <DiapositiveAffichee key={courante + 1} page={page} />)
+            suivante.map((page) => (
+              <DiapositiveAffichee key={courante + 1} page={page} pied={pied(courante + 1)} />
+            ))
           )}
         </section>
       </div>

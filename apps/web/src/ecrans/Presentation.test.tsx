@@ -90,18 +90,18 @@ describe('Présentation', () => {
 
     await userEvent.keyboard('{Enter}');
     expect(diffusion()).toBeVisible();
-    expect(within(diffusion()).getByText('1 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('1 / 5');
     await userEvent.keyboard('{ArrowRight}');
     expect(titreDiffuse()).toBe('Le coût caché');
     await userEvent.keyboard(' ');
     await userEvent.keyboard('{PageDown}');
-    expect(within(diffusion()).getByText('4 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('4 / 5');
     await userEvent.keyboard('{End}{ArrowRight}');
-    expect(within(diffusion()).getByText('5 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('5 / 5');
     await userEvent.keyboard('{ArrowLeft}{PageUp}');
-    expect(within(diffusion()).getByText('3 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('3 / 5');
     await userEvent.keyboard('{Home}{ArrowLeft}');
-    expect(within(diffusion()).getByText('1 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('1 / 5');
     await userEvent.keyboard('a');
     await userEvent.keyboard('{Escape}');
     expect(diffusion()).not.toBeVisible();
@@ -119,7 +119,7 @@ describe('Présentation', () => {
       screen.getByRole('button', { name: 'Présenter à partir de la diapositive 3' }),
     );
     expect(pleinEcran).toHaveBeenCalled();
-    expect(within(diffusion()).getByText('3 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('3 / 5');
     Object.defineProperty(document, 'fullscreenElement', {
       value: document.body,
       configurable: true,
@@ -181,7 +181,7 @@ describe('Présentation', () => {
     act(() => {
       bus.diffuser('d', { type: 'aller', numero: 3 });
     });
-    expect(within(diffusion()).getByText('4 / 5')).toBeInTheDocument();
+    expect(within(diffusion()).getByRole('status')).toHaveTextContent('4 / 5');
     act(() => {
       bus.diffuser('d', { type: 'demande' });
     });
