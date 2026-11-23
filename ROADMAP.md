@@ -12,7 +12,8 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | terminée |
 | **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | terminée |
 | **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | en cours |
-| **8. Premier cas terrain**  | Saisonnalité, coût de la solution et options d’hébergement, tâches abandonnées, modèles de processus d’artisan            | Un diagnostic réel se saisit et se présente sans contournement                                         | en cours |
+| **8. Premier cas terrain**  | Saisonnalité, coût de la solution et options d’hébergement, tâches abandonnées, modèles de processus d’artisan            | Un diagnostic réel se saisit et se présente sans contournement                                         | terminée |
+| **9. Passe visuelle**       | Charte du deck (rubriques, pied de page, chiffres alignés, badges), interface harmonisée, miniatures réparées             | Le deck a la tenue d’un document de conseil, et aucune réduction ne déborde                            | terminée |
 
 ## Phase 0 — notes
 
@@ -82,3 +83,9 @@ Adaptation à un premier cas de terrain : un artisan dont l'activité se concent
 - Modèles de processus d'artisan : questions récurrentes des clients, fin de chantier, dossiers de primes à la rénovation, planning des intervenants, mail d'envoi des devis (18 modèles en tout). Leurs niveaux d'automatisation chez un artisan type (facturation et messagerie par e-mail, plateforme et agenda sans accès) sont fixés par des tests.
 - Thème du prospect : voir [ADR 0016](docs/adr/0016-theme-du-prospect.md). Couleur et logo sur la page de titre, couleur assombrie automatiquement si elle n'est pas lisible sur fond blanc, format d'export 5. Le test des champs facultatifs a trouvé qu'une modification des options aurait effacé le thème.
 - La mise à jour de Playwright par Dependabot demande `pnpm --filter @slideshow/web exec playwright install chromium` en local.
+
+## Phase 9 — notes
+
+- Charte visuelle : voir [ADR 0017](docs/adr/0017-charte-visuelle.md).
+- La revue des captures a trouvé les miniatures de l'écran de lancement et de la vue présentateur illisibles : les tailles en `cqw` se mesuraient sur la fenêtre. Un nouveau test E2E les contrôle ; il échoue sur l'ancien code.
+- Inter rapproche le « 1 » de l'espace fine qui le suit (« 1514 € ») et élargit le trait d'union en chiffres tabulaires (« e - mails ») : les chiffres tabulaires ne s'appliquent qu'aux nombres.
