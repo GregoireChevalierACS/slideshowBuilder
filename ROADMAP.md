@@ -89,3 +89,4 @@ Adaptation à un premier cas de terrain : un artisan dont l'activité se concent
 - Charte visuelle : voir [ADR 0017](docs/adr/0017-charte-visuelle.md).
 - La revue des captures a trouvé les miniatures de l'écran de lancement et de la vue présentateur illisibles : les tailles en `cqw` se mesuraient sur la fenêtre. Un nouveau test E2E les contrôle ; il échoue sur l'ancien code.
 - Inter rapproche le « 1 » de l'espace fine qui le suit (« 1514 € ») et élargit le trait d'union en chiffres tabulaires (« e - mails ») : les chiffres tabulaires ne s'appliquent qu'aux nombres.
+- Même avec la police embarquée, le rendu diffère légèrement entre Windows et Linux : la diapositive des options, à 15 px de la réserve, a échoué en CI. Elle garde désormais plus de 50 px de mou. Règle retenue : viser au moins 40 px au-delà de la réserve sur le cas chargé.
