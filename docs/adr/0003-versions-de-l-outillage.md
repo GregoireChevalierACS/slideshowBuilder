@@ -19,6 +19,12 @@ Au démarrage du projet, TypeScript 7 (compilateur natif) est sorti, mais typesc
 - **Vitest redescend de 5.0.5 à 4.1.12.** Stryker 10.0.0 ne supporte pas Vitest 5 : les mutants ne sont jamais activés et **survivent tous en silence** (score de 0 % alors que les tests sont corrects). Le support de Vitest 5 arrive dans Stryker 10.1.0, publié le 2026-10-23, donc encore en quarantaine.
 - À réviser : passer ensemble à Stryker ≥ 10.1 et Vitest 5 une fois la quarantaine écoulée. La CI le détectera si Dependabot ne monte que Vitest : le score de mutation tomberait sous le seuil bloquant.
 
+## Révision du 2026-11-23 : Vitest 5, TypeScript 7 toujours en attente
+
+- **Vitest 5.1** (avec `@vitest/coverage-v8` 5.1 et `@testing-library/jest-dom` 8, qui ne supporte plus que Vitest 5), sur **Stryker 10.1.1**. Vérifié : 1 066 mutants générés sur 30 fichiers du domaine, score de 100 %. Le piège d'octobre (des mutants jamais activés, qui survivent tous) ne se reproduit pas.
+- **TypeScript reste en 6.0** : typescript-eslint 8.73 exige toujours `typescript <6.1.0`, et TypeScript 7.0.2 vient de paraître (quarantaine). L'exclusion Dependabot est maintenue.
+- **`minimatch` forcé en 11.0.9 sous Stryker** (`pnpm-workspace.yaml`) : Stryker 10.1 épingle minimatch 10, touché par un déni de service (GHSA-g3hv-75wg-m249). Outil de développement seulement ; la mutation vérifie que Stryker trouve toujours ses fichiers. À retirer quand Stryker passera à minimatch 11.
+
 ## Alternatives écartées
 
 - **TypeScript 7 sans lint typé** : on perdrait les règles `strictTypeChecked`, qui détectent des classes entières de bugs.

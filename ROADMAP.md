@@ -11,7 +11,7 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 | **4. Persistance, serveur** | SQLite, migrations, dépôts, contract tests Fake/SQLite, zod, Problem Details                                              | La suite de contrats passe sur les deux adapters, le smoke test du build passe                         | terminée |
 | **5. Saisie**               | Formulaires au clavier, modèles de processus pré-remplis, sauvegarde automatique                                          | Un entretien type se saisit en moins de 10 minutes sans souris                                         | terminée |
 | **6. Présentation**         | Gabarits de diapositives, schémas Mermaid, mode présentation, export PDF                                                  | E2E Playwright vert, captures visuelles stables                                                        | terminée |
-| **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | en cours |
+| **7. Extras**               | Export PPTX, import et export JSON, thème aux couleurs du prospect, ROI                                                   | Selon les retours du terrain                                                                           | terminée |
 | **8. Premier cas terrain**  | Saisonnalité, coût de la solution et options d’hébergement, tâches abandonnées, modèles de processus d’artisan            | Un diagnostic réel se saisit et se présente sans contournement                                         | terminée |
 | **9. Passe visuelle**       | Charte du deck (rubriques, pied de page, chiffres alignés, badges), interface harmonisée, miniatures réparées             | Le deck a la tenue d’un document de conseil, et aucune réduction ne déborde                            | terminée |
 
@@ -68,6 +68,8 @@ Chaque phase a un critère de fin vérifiable. L'état réel et les pièges renc
 - Import et export JSON : voir [ADR 0011](docs/adr/0011-export-et-import-des-diagnostics.md). Historique complet, fichier validé en entier avant écriture, import idempotent qui complète un historique poursuivi ailleurs sans jamais écraser un historique divergent.
 - Piège : Windows ne distingue pas la casse des noms de fichier ; `ExportDeDiagnostics.ts` à côté de `exportDeDiagnostics.ts` écrase le second. Le type du fichier vit donc dans `FichierDExport.ts`.
 - Le test E2E de présentation comptait l'aperçu avant son affichage (`count()` n'attend pas) : échec intermittent sur machine chargée, corrigé.
+- Bilan : import et export JSON (ADR 0011), thème du prospect (ADR 0016), retour sur investissement traité par le coût par heure récupérée (ADR 0013). L'export PPTX n'est pas fait : le PDF suffit à ce jour, il sera repris si un prospect demande à retoucher le deck.
+- Outillage (2026-11-23) : Vitest 5 sur Stryker 10.1, score de mutation inchangé ; TypeScript 7 attend typescript-eslint. Voir la révision de l'ADR 0003.
 
 ## Phase 8 — notes
 
