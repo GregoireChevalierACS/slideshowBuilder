@@ -20,8 +20,18 @@ export const App = ({
   return (
     <FournisseurDeRaccourcis stockage={stockage}>
       <nav className="navigation">
-        <a href={lienVers({ ecran: 'accueil' })}>Diagnostics</a>
-        <a href={lienVers({ ecran: 'parametres' })}>Paramètres</a>
+        <a
+          href={lienVers({ ecran: 'accueil' })}
+          aria-current={route.ecran === 'parametres' ? undefined : 'page'}
+        >
+          Diagnostics
+        </a>
+        <a
+          href={lienVers({ ecran: 'parametres' })}
+          aria-current={route.ecran === 'parametres' ? 'page' : undefined}
+        >
+          Paramètres
+        </a>
       </nav>
       {route.ecran === 'accueil' && (
         <Accueil

@@ -31,41 +31,53 @@ type Partie = Page['partie'];
 /** La dernière page d'une liste répartie (ou la seule) porte le total. */
 const estLaDerniere = (partie: Partie) => partie === undefined || partie.numero === partie.total;
 
+/** Le fil du récit : le client sait toujours où il en est. */
+type Rubrique = 'Le constat' | 'La solution' | 'Les gains' | 'La suite' | 'Annexe';
+
 const Cadre = ({
+  rubrique,
   titre,
   partie,
   children,
 }: {
+  readonly rubrique: Rubrique;
   readonly titre: string;
   readonly partie: Partie;
   readonly children: ReactNode;
 }) => (
   <>
-    <h2 className="titre-de-diapositive">
-      {titre}
-      {partie !== undefined && (
-        <span className="partie">
-          {' '}
-          · {partie.numero}/{partie.total}
-        </span>
-      )}
-    </h2>
+    <header className="entete-de-diapositive">
+      <p className="rubrique">{rubrique}</p>
+      <h2 className="titre-de-diapositive">
+        {titre}
+        {partie !== undefined && (
+          <span className="partie">
+            {' '}
+            · {partie.numero}/{partie.total}
+          </span>
+        )}
+      </h2>
+    </header>
     <div className="contenu-de-diapositive">{children}</div>
   </>
 );
 
 const Titre = ({ d }: { readonly d: DiapositiveTitre }) => (
-  <div className="diapositive-titre">
+  <>
+    {/* La couleur du prospect, déjà rendue lisible par le domaine ; sinon, celle de l'application. */}
+    <div className="bande-du-titre" style={{ backgroundColor: d.couleur }} />
     {d.logo !== undefined && (
       <img className="logo-du-prospect" src={d.logo} alt={`Logo de ${d.prospect}`} />
     )}
-    {/* La couleur du prospect, déjà rendue lisible par le domaine ; sinon, celle de l'application. */}
-    <h1 style={{ borderBottomColor: d.couleur }}>{d.titre}</h1>
-    <p className="prospect" style={{ color: d.couleur }}>
-      {d.prospect}
-    </p>
-    <p className="date">{d.date}</p>
-  </div>
+    <div className="diapositive-titre">
+      <p className="rubrique">Diagnostic d’automatisation</p>
+      <h1>{d.titre}</h1>
+      <p className="prospect" style={{ color: d.couleur }}>
+        {d.prospect}
+      </p>
+      <p className="date">{d.date}</p>
+    </div>
+  </>
 );
 
 const Observation = ({
@@ -75,7 +87,7 @@ const Observation = ({
   readonly d: DiapositiveObservation;
   readonly partie: Partie;
 }) => (
-  <Cadre titre="Ce que nous avons observé" partie={partie}>
+  <Cadre rubrique="Le constat" titre="Ce que nous avons observé" partie={partie}>
     <p className="contexte">
       {[
         d.secteur,
@@ -84,33 +96,41 @@ const Observation = ({
         .filter((texte) => texte !== undefined)
         .join(' · ')}
     </p>
-    <ul className="etiquettes" aria-label="Outils en place">
-      {d.outils.map((outil) => (
-        <li key={outil.nom}>
-          {outil.nom} <small>{LIBELLES_DES_CATEGORIES[outil.categorie]}</small>
-        </li>
-      ))}
-    </ul>
-    <ul className="liste-a-puces" aria-label="Processus relevés">
-      {d.processus.map((nom) => (
-        <li key={nom}>{nom}</li>
-      ))}
-    </ul>
+    <div className="observation">
+      <section>
+        <h3 className="intitule">Vos outils</h3>
+        <ul className="etiquettes" aria-label="Outils en place">
+          {d.outils.map((outil) => (
+            <li key={outil.nom}>
+              {outil.nom} <small>{LIBELLES_DES_CATEGORIES[outil.categorie]}</small>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h3 className="intitule">Les tâches répétitives relevées</h3>
+        <ul className="liste-a-puces" aria-label="Processus relevés">
+          {d.processus.map((nom) => (
+            <li key={nom}>{nom}</li>
+          ))}
+        </ul>
+      </section>
+    </div>
   </Cadre>
 );
 
 const CoutCache = ({ d }: { readonly d: DiapositiveCoutCache }) => (
-  <Cadre titre="Le coût caché" partie={undefined}>
+  <Cadre rubrique="Le constat" titre="Le coût caché" partie={undefined}>
     <p className="chiffre-cle">{enHeures(d.tempsActuelParAn.enSecondes)}</p>
     <p className="sous-titre">par an, aujourd’hui, sur {d.nombreDeProcessus} processus</p>
-    <div className="chiffres-secondaires">
-      <p>
-        <strong>{enEuros(d.valeurActuelleParAn.enCentimes)}</strong> de temps de travail
-      </p>
-      <p>
-        <strong>{enEtp(d.equivalentsTempsPleinActuels)}</strong> occupés
-      </p>
-    </div>
+    <ul className="tuiles" aria-label="Ce que coûte ce temps">
+      <li>
+        <strong>{enEuros(d.valeurActuelleParAn.enCentimes)}</strong> de temps de travail par an
+      </li>
+      <li>
+        <strong>{enEtp(d.equivalentsTempsPleinActuels)}</strong> occupés à ces tâches
+      </li>
+    </ul>
   </Cadre>
 );
 
@@ -121,8 +141,8 @@ const Tableau = ({
   readonly d: DiapositiveTableauDesProcessus;
   readonly partie: Partie;
 }) => (
-  <Cadre titre="Processus par processus" partie={partie}>
-    <table className="tableau">
+  <Cadre rubrique="Le constat" titre="Processus par processus" partie={partie}>
+    <table className="tableau tableau-chiffre">
       <thead>
         <tr>
           <th scope="col">Processus</th>
@@ -168,7 +188,7 @@ const Tableau = ({
 );
 
 const Architecture = ({ d }: { readonly d: DiapositiveArchitecture }) => (
-  <Cadre titre="Architecture cible" partie={undefined}>
+  <Cadre rubrique="La solution" titre="Architecture cible" partie={undefined}>
     <SchemaDArchitecture diapositive={d} />
     {d.utiliseIA && (
       <p className="legende">
@@ -179,10 +199,12 @@ const Architecture = ({ d }: { readonly d: DiapositiveArchitecture }) => (
 );
 
 const Solution = ({ d }: { readonly d: DiapositiveSolutionDUnProcessus }) => (
-  <Cadre titre={d.processus} partie={undefined}>
+  <Cadre rubrique="La solution" titre={d.processus} partie={undefined}>
     <p className="niveau">
-      {LIBELLES_DES_NIVEAUX[d.solution.niveau]} · {d.solution.tauxSuggeres.bas.valeur} à{' '}
-      {d.solution.tauxSuggeres.haut.valeur} % du temps gagné
+      <span className={`badge badge-${d.solution.niveau}`}>
+        {LIBELLES_DES_NIVEAUX[d.solution.niveau]}
+      </span>{' '}
+      {d.solution.tauxSuggeres.bas.valeur} à {d.solution.tauxSuggeres.haut.valeur} % du temps gagné
     </p>
     <ul className="justifications">
       {d.solution.justifications.map(({ briques, raison }) => (
@@ -206,7 +228,7 @@ const Gains = ({
   const maximum = Math.max(1, ...d.parProcessus.map((p) => p.valeurGagneeParAn.haut.enCentimes));
   const pourcent = (centimes: number) => `${String((100 * centimes) / maximum)}%`;
   return (
-    <Cadre titre="Gains attendus" partie={partie}>
+    <Cadre rubrique="Les gains" titre="Gains attendus" partie={partie}>
       <p className="chiffre-cle">
         {fourchette(
           d.total.valeurGagneeParAn.bas.enCentimes,
@@ -222,6 +244,10 @@ const Gains = ({
           enEtp,
         )}{' '}
         libérés
+        <span className="legende-des-barres" aria-hidden="true">
+          <span className="pastille pastille-basse" /> estimation prudente
+          <span className="pastille pastille-haute" /> optimiste
+        </span>
       </p>
       <ul className="barres" aria-label="Gain par processus">
         {d.parProcessus.map(({ processus, valeurGagneeParAn: { bas, haut } }) => (
@@ -263,13 +289,15 @@ const FeuilleDeRoute = ({
   readonly d: DiapositiveFeuilleDeRoute;
   readonly partie: Partie;
 }) => (
-  <Cadre titre="Feuille de route" partie={partie}>
+  <Cadre rubrique="La suite" titre="Feuille de route" partie={partie}>
     <ol className="chantiers">
       {d.chantiers.map((chantier) => (
         <li key={chantier.nom}>
           <span className="rang">{chantier.rang}</span>
           <span className="nom">{chantier.nom}</span>
-          <span className="niveau">{LIBELLES_DES_NIVEAUX[chantier.niveau]}</span>
+          <span className={`badge badge-${chantier.niveau}`}>
+            {LIBELLES_DES_NIVEAUX[chantier.niveau]}
+          </span>
           <span className="valeur">
             jusqu’à {enEuros(chantier.valeurGagneeParAn.haut.enCentimes)} par an
           </span>
@@ -296,7 +324,7 @@ const Hypotheses = ({
   readonly d: DiapositiveHypotheses;
   readonly partie: Partie;
 }) => (
-  <Cadre titre="Hypothèses de calcul" partie={partie}>
+  <Cadre rubrique="Annexe" titre="Hypothèses de calcul" partie={partie}>
     <p className="contexte">
       {d.hypotheses.joursTravaillesParAn} jours travaillés par an ·{' '}
       {d.hypotheses.heuresAnnuellesTempsPlein} h pour un temps plein
@@ -333,7 +361,11 @@ const TITRES_DES_OPTIONS: Readonly<Record<number, string>> = {
 };
 
 const Options = ({ d }: { readonly d: DiapositiveOptions }) => (
-  <Cadre titre={TITRES_DES_OPTIONS[d.options.length] ?? 'Comment l’héberger'} partie={undefined}>
+  <Cadre
+    rubrique="Les gains"
+    titre={TITRES_DES_OPTIONS[d.options.length] ?? 'Comment l’héberger'}
+    partie={undefined}
+  >
     <p className="contexte">
       Pour{' '}
       {fourchette(d.tempsGagneParAn.bas.enSecondes, d.tempsGagneParAn.haut.enSecondes, enHeures)}{' '}
@@ -369,8 +401,27 @@ const Options = ({ d }: { readonly d: DiapositiveOptions }) => (
   </Cadre>
 );
 
-/** Une diapositive sur sa toile 16:9. Le même rendu sert à l'aperçu, au plein écran et au PDF. */
-export const DiapositiveAffichee = ({ page }: { readonly page: Page }) => {
+/** Repère de bas de page : le prospect, le document et la place de la diapositive dans le deck. */
+export interface PiedDeDiapositive {
+  readonly prospect: string;
+  /** À partir de 1. */
+  readonly numero: number;
+  readonly total: number;
+}
+
+/**
+ * Une diapositive sur sa toile 16:9. Le même rendu sert à l'aperçu, au plein écran et au PDF. La
+ * toile est le conteneur des mesures en `cqw` : la diapositive se met à l'échelle de la place
+ * qu'on lui donne, miniature comprise.
+ */
+export const DiapositiveAffichee = ({
+  page,
+  pied,
+}: {
+  readonly page: Page;
+  /** Absent pour un aperçu isolé (la page de titre dans la saisie du thème). */
+  readonly pied?: PiedDeDiapositive;
+}) => {
   const { diapositive: d, partie } = page;
   const contenu = (() => {
     switch (d.kind) {
@@ -397,8 +448,18 @@ export const DiapositiveAffichee = ({ page }: { readonly page: Page }) => {
     }
   })();
   return (
-    <section className={`diapositive diapositive-${d.kind}`} aria-roledescription="diapositive">
-      {contenu}
-    </section>
+    <div className="toile">
+      <section className={`diapositive diapositive-${d.kind}`} aria-roledescription="diapositive">
+        {contenu}
+        {pied !== undefined && d.kind !== 'Titre' && (
+          <footer className="pied-de-diapositive">
+            <span>{pied.prospect} · Diagnostic d’automatisation</span>
+            <span>
+              {pied.numero} / {pied.total}
+            </span>
+          </footer>
+        )}
+      </section>
+    </div>
   );
 };

@@ -111,12 +111,15 @@ export const Presentation = ({
   }
 
   const versions = Array.from({ length: deck.derniereVersion }, (_, i) => deck.derniereVersion - i);
+  const pied = (numero: number) => ({ prospect: deck.prospect, numero: numero + 1, total: nombre });
 
   return (
     <main className="presentation">
       <div className="ecran-de-lancement">
         <a href={lienVers({ ecran: 'entretien', id })}>← Retour à l’entretien</a>
-        <h1>Présenter : {deck.prospect}</h1>
+        <h1>
+          Présenter <span className="discret">: {deck.prospect}</span>
+        </h1>
         <div className="reglages">
           <ChampDeChoix
             libelle="Public"
@@ -152,6 +155,7 @@ export const Presentation = ({
         <div className="actions">
           <button
             type="button"
+            className="principal"
             // L'écran s'ouvre pour présenter : Entrée lance aussitôt.
             autoFocus
             onClick={() => {
@@ -197,7 +201,7 @@ export const Presentation = ({
                   diffuser(numero);
                 }}
               >
-                <DiapositiveAffichee page={page} />
+                <DiapositiveAffichee page={page} pied={pied(numero)} />
               </button>
             </li>
           ))}
@@ -206,9 +210,9 @@ export const Presentation = ({
 
       <div className="scene" hidden={!enDiffusion} aria-label="Diffusion" role="region">
         {deck.pages.slice(courante, courante + 1).map((page) => (
-          <DiapositiveAffichee key={courante} page={page} />
+          <DiapositiveAffichee key={courante} page={page} pied={pied(courante)} />
         ))}
-        <p className="compteur">
+        <p className="compteur" role="status">
           {courante + 1} / {nombre}
         </p>
       </div>
@@ -216,7 +220,7 @@ export const Presentation = ({
       {/* Le PDF : toutes les diapositives, une par page imprimée (voir @media print). */}
       <div className="impression" aria-hidden="true">
         {deck.pages.map((page, numero) => (
-          <DiapositiveAffichee key={numero} page={page} />
+          <DiapositiveAffichee key={numero} page={page} pied={pied(numero)} />
         ))}
       </div>
     </main>

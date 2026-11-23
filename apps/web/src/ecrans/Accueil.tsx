@@ -132,6 +132,7 @@ export const Accueil = ({
       ) : (
         <button
           type="button"
+          className="principal"
           onClick={() => {
             setEnCreation(true);
           }}

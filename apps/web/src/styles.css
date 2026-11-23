@@ -1,13 +1,16 @@
-/* Sobre et lisible en rendez-vous : contraste fort, grandes zones de clic, focus toujours visible. */
+/* Sobre et lisible en rendez-vous : contraste fort, grandes zones de clic, focus toujours visible.
+   L'interface reprend l'encre et l'accent des diapositives : l'outil et le deck se ressemblent. */
 
 :root {
-  --fond: #f7f7f5;
+  --fond: #f4f6f9;
   --surface: #ffffff;
-  --texte: #1d1d1f;
-  --discret: #5f6368;
+  --texte: #14213d;
+  --discret: #5b6472;
   --accent: #1f5fbf;
+  --accent-fonce: #17478f;
   --alerte: #a8261b;
-  --bordure: #d9d9d6;
+  --bordure: #dfe3e8;
+  --ombre: 0 1px 3px rgb(20 33 61 / 10%);
   color-scheme: light;
   /* Embarquée (ADR 0014) : les mesures de débordement valent sur toutes les machines. */
   font-family:
@@ -45,12 +48,32 @@ main {
   padding: 24px 16px;
 }
 
+h1 {
+  letter-spacing: -0.01em;
+}
+
 .navigation {
   display: flex;
-  gap: 24px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--bordure);
-  background: var(--surface);
+  gap: 4px;
+  padding: 0 16px;
+  background: #14213d;
+}
+
+.navigation a {
+  padding: 14px 14px 12px;
+  border-bottom: 3px solid transparent;
+  color: #c8d0dc;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navigation a:hover {
+  color: #ffffff;
+}
+
+.navigation a[aria-current='page'] {
+  border-bottom-color: #6f9ce6;
+  color: #ffffff;
 }
 
 a {
@@ -70,12 +93,39 @@ button {
   background: var(--surface);
   color: var(--texte);
   cursor: pointer;
+  box-shadow: var(--ombre);
+}
+
+button:hover {
+  border-color: #b9c1cc;
+}
+
+/* L'action principale d'un écran : une seule par écran. */
+button.principal,
+.bouton-presenter {
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+button.principal:hover,
+.bouton-presenter:hover {
+  background: var(--accent-fonce);
+}
+
+button.principal kbd {
+  border-color: rgb(255 255 255 / 50%);
+  color: #ffffff;
 }
 
 input,
 select {
   font: inherit;
-  padding: 6px 8px;
+  padding: 7px 10px;
   border: 1px solid var(--bordure);
   border-radius: 6px;
   background: var(--surface);
@@ -116,13 +166,19 @@ kbd {
 
 .liste-des-diagnostics a {
   display: block;
-  padding: 12px 16px;
-  margin-bottom: 8px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
   border: 1px solid var(--bordure);
+  border-left: 4px solid var(--accent);
   border-radius: 8px;
   background: var(--surface);
   color: var(--texte);
   text-decoration: none;
+  box-shadow: var(--ombre);
+}
+
+.liste-des-diagnostics a:hover {
+  box-shadow: 0 4px 12px rgb(20 33 61 / 12%);
 }
 
 .parametres table {
@@ -224,6 +280,8 @@ label.interrupteur {
 
 .liste-des-processus button[aria-current='true'] {
   border-color: var(--accent);
+  border-left-width: 4px;
+  background: #eaf0fa;
   font-weight: 600;
 }
 
@@ -245,8 +303,8 @@ label.interrupteur {
 }
 
 .section legend {
-  font-weight: 600;
-  padding: 0 4px;
+  font-weight: 700;
+  padding: 0 6px;
 }
 
 .section .outil {
@@ -298,8 +356,18 @@ label.interrupteur {
 }
 
 .panneau-en-direct h2 {
-  margin-top: 0;
-  font-size: 1.1em;
+  margin: -12px -16px 12px;
+  padding: 10px 16px;
+  border-radius: 8px 8px 0 0;
+  background: #14213d;
+  color: #ffffff;
+  font-size: 0.85em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panneau-en-direct strong {
+  font-variant-numeric: tabular-nums;
 }
 
 .briques {
@@ -323,65 +391,6 @@ label.interrupteur {
   border-radius: 6px;
 }
 
-/* --- Diapositives : une toile 16:9 dont tout est mesuré en largeur de toile (cqw) ---
-   La même diapositive se met à l'échelle d'elle-même : miniature, plein écran ou page PDF. */
-
-.diapositive {
-  container-type: inline-size;
-  position: relative;
-  box-sizing: border-box;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  padding: 4.5cqw 6cqw;
-  background: #ffffff;
-  color: #1d1d1f;
-  font-size: 2cqw;
-  line-height: 1.35;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-}
-
-.diapositive h1,
-.diapositive h2,
-.diapositive p,
-.diapositive ul,
-.diapositive ol {
-  margin: 0;
-}
-
-.titre-de-diapositive {
-  font-size: 3.4cqw;
-  color: #1f5fbf;
-  margin-bottom: 2.5cqw !important;
-}
-
-.titre-de-diapositive .partie {
-  color: #8a8f98;
-  font-weight: normal;
-}
-
-.contenu-de-diapositive {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.6cqw;
-}
-
-.diapositive-titre {
-  margin: auto 0;
-}
-
-.diapositive-titre .logo-du-prospect {
-  display: block;
-  max-height: 9cqw;
-  max-width: 30cqw;
-  object-fit: contain;
-  margin-bottom: 3cqw;
-}
-
 .apercu-du-titre {
   max-width: 480px;
   border: 1px solid var(--bordure);
@@ -392,39 +401,214 @@ label.interrupteur {
   gap: 12px;
 }
 
+/* --- Diapositives : une toile 16:9 dont tout est mesuré en largeur de toile (cqw) ---
+   La toile est le conteneur des mesures : la même diapositive se met à l'échelle de la place qu'on
+   lui donne, miniature, plein écran ou page PDF. Sobre, à la manière d'un document de conseil :
+   une encre sombre, un seul accent, des chiffres alignés. */
+
+.toile {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.diapositive {
+  --encre: #14213d;
+  --accent-diapo: #1f5fbf;
+  --accent-pale: #eaf0fa;
+  --gris: #5b6472;
+  --filet: #e3e6ea;
+  --vert: #2e7d32;
+
+  container-type: inline-size;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  padding: 3.6cqw 6cqw 2.4cqw;
+  background: #ffffff;
+  color: var(--encre);
+  font-size: 2cqw;
+  line-height: 1.35;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chiffres de même largeur, là où il y a des chiffres : les colonnes s'alignent, et le séparateur
+   de milliers reste visible (Inter rapproche sinon le « 1 » de l'espace fine qui le suit). Pas sur
+   le texte : Inter élargit aussi le trait d'union des « e-mails ». */
+.diapositive :is(td, .valeur, .chiffre-cle, .tuiles strong, dd, .cout-par-heure, .rang),
+.diapositive .tableau tfoot th {
+  font-variant-numeric: tabular-nums;
+}
+
+.diapositive h1,
+.diapositive h2,
+.diapositive h3,
+.diapositive p,
+.diapositive ul,
+.diapositive ol {
+  margin: 0;
+}
+
+/* Le fil du récit, au-dessus de chaque titre. */
+.diapositive .rubrique {
+  font-size: 1.25cqw;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-diapo);
+}
+
+.entete-de-diapositive {
+  display: grid;
+  gap: 0.4cqw;
+  margin-bottom: 2cqw;
+  padding-bottom: 1.4cqw;
+  border-bottom: 0.12cqw solid var(--filet);
+}
+
+.titre-de-diapositive {
+  font-size: 3cqw;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+.titre-de-diapositive .partie {
+  color: var(--gris);
+  font-weight: 400;
+}
+
+.contenu-de-diapositive {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+}
+
+.pied-de-diapositive {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.2cqw;
+  padding-top: 0.8cqw;
+  border-top: 0.1cqw solid var(--filet);
+  font-size: 1.1cqw;
+  color: var(--gris);
+}
+
+.diapositive .contexte,
+.diapositive .sous-titre,
+.diapositive .legende,
+.diapositive-titre .date {
+  color: var(--gris);
+}
+
+.diapositive .intitule {
+  font-size: 1.3cqw;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gris);
+  margin-bottom: 1cqw;
+}
+
+/* --- Page de titre : une bande à la couleur du prospect, un titre en grand --- */
+
+.diapositive-Titre {
+  padding-left: 9cqw;
+}
+
+.bande-du-titre {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1.6cqw;
+  background: var(--accent-diapo);
+}
+
+.diapositive-titre {
+  margin: auto 0;
+  display: grid;
+  gap: 1.2cqw;
+}
+
 .diapositive-titre h1 {
-  font-size: 5.5cqw;
-  line-height: 1.1;
-  max-width: 70%;
-  border-bottom: 0.5cqw solid #1f5fbf;
-  padding-bottom: 2cqw;
-  margin-bottom: 3cqw;
+  font-size: 5.2cqw;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 75%;
+  margin-bottom: 1.6cqw;
 }
 
 .diapositive-titre .prospect {
-  font-size: 3cqw;
+  font-size: 2.8cqw;
   font-weight: 600;
+  color: var(--accent-diapo);
 }
 
-.diapositive-titre .date,
-.diapositive .contexte,
-.diapositive .sous-titre,
-.diapositive .legende {
-  color: #5f6368;
+.diapositive-titre .date {
+  font-size: 1.8cqw;
 }
+
+.diapositive-Titre .logo-du-prospect {
+  position: absolute;
+  top: 4cqw;
+  right: 6cqw;
+  max-height: 8cqw;
+  max-width: 24cqw;
+  object-fit: contain;
+}
+
+/* --- Chiffres clés --- */
 
 .chiffre-cle {
-  font-size: 7cqw;
+  font-size: 6.4cqw;
   font-weight: 700;
-  color: #1f5fbf;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--accent-diapo);
+  line-height: 1.05;
 }
 
-.chiffres-secondaires {
-  display: flex;
-  gap: 8cqw;
-  font-size: 2.6cqw;
-  margin-top: 2cqw;
+.tuiles {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  grid-auto-flow: column;
+  gap: 2cqw;
+  margin-top: 1.4cqw !important;
+}
+
+.tuiles li {
+  padding: 2cqw 2.4cqw;
+  border-radius: 1cqw;
+  background: var(--accent-pale);
+  color: var(--gris);
+  font-size: 1.8cqw;
+}
+
+.tuiles strong {
+  display: block;
+  font-size: 3.4cqw;
+  line-height: 1.1;
+  color: var(--encre);
+  margin-bottom: 0.4cqw;
+}
+
+/* --- Observation : les outils, puis les tâches --- */
+
+.observation {
+  display: grid;
+  gap: 2.2cqw;
+  min-height: 0;
+}
+
+/* Un élément de grille prend sinon la largeur de son contenu : les noms longs ne seraient jamais
+   tronqués et sortiraient du cadre. */
+.observation > section {
+  min-width: 0;
 }
 
 .etiquettes {
@@ -432,25 +616,30 @@ label.interrupteur {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 1cqw;
+  gap: 0.8cqw;
 }
 
 .etiquettes li {
-  font-size: 1.6cqw;
+  font-size: 1.5cqw;
   padding: 0.5cqw 1.2cqw;
-  border: 0.15cqw solid #d9d9d6;
-  border-radius: 1cqw;
+  border: 0.12cqw solid var(--filet);
+  border-radius: 5cqw;
+  background: #ffffff;
 }
 
 .etiquettes small {
-  color: #5f6368;
+  color: var(--gris);
 }
 
 .liste-a-puces {
   columns: 2;
-  column-gap: 4cqw;
-  padding-left: 2.5cqw;
-  font-size: 1.7cqw;
+  column-gap: 3cqw;
+  padding-left: 2cqw;
+  font-size: 1.6cqw;
+}
+
+.liste-a-puces li::marker {
+  color: var(--accent-diapo);
 }
 
 /* Un nom par ligne, tronqué : un nom très long ne repousse pas la liste hors du cadre. */
@@ -460,16 +649,18 @@ label.interrupteur {
   text-overflow: ellipsis;
 }
 
+/* --- Tableaux : en-tête discret, chiffres alignés à droite, total souligné --- */
+
 .diapositive .tableau {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.8cqw;
+  font-size: 1.7cqw;
 }
 
 .diapositive .tableau th,
 .diapositive .tableau td {
-  padding: 0.8cqw 1cqw;
-  border-bottom: 0.1cqw solid #d9d9d6;
+  padding: 0.75cqw 1cqw;
+  border-bottom: 0.1cqw solid var(--filet);
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -477,9 +668,30 @@ label.interrupteur {
   max-width: 30cqw;
 }
 
-.diapositive .tableau tfoot {
+.diapositive .tableau thead th {
+  font-size: 1.2cqw;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gris);
+  border-bottom: 0.15cqw solid var(--encre);
 }
+
+.diapositive .tableau tbody th {
+  font-weight: 500;
+}
+
+.diapositive .tableau-chiffre :is(td, thead th:not(:first-child)) {
+  text-align: right;
+}
+
+.diapositive .tableau tfoot :is(th, td) {
+  font-weight: 700;
+  border-top: 0.15cqw solid var(--encre);
+  border-bottom: none;
+}
+
+/* --- Schéma d'architecture --- */
 
 .diapositive .schema {
   width: 100%;
@@ -495,12 +707,12 @@ label.interrupteur {
   display: flex;
   align-items: center;
   padding: 4px 16px;
-  border: 1.5px solid #8a8f98;
+  border: 1.5px solid #c9ced6;
   border-radius: 8px;
   background: #ffffff;
   font-size: 17px;
   line-height: 1.3;
-  color: #1d1d1f;
+  color: #14213d;
 }
 
 .schema .boite p {
@@ -511,7 +723,7 @@ label.interrupteur {
   justify-content: center;
   text-align: center;
   border-color: #1f5fbf;
-  background: #f2f5fb;
+  background: #eaf0fa;
 }
 
 .schema .boite-ia {
@@ -520,7 +732,7 @@ label.interrupteur {
 }
 
 .schema .detail {
-  color: #5f6368;
+  color: #5b6472;
 }
 
 .schema .ia {
@@ -529,44 +741,83 @@ label.interrupteur {
 }
 
 .schema .lien {
-  stroke: #8a8f98;
+  stroke: #9aa3b0;
   stroke-width: 2;
 }
 
-.diapositive .niveau {
-  font-size: 2.4cqw;
+/* --- Niveaux d'automatisation : un badge par niveau --- */
+
+.badge {
+  display: inline-block;
+  padding: 0.3cqw 1cqw;
+  border-radius: 5cqw;
+  font-size: 1.25cqw;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-complete {
+  background: #e3f1e4;
+  color: #1e5e22;
+}
+
+.badge-assistee {
+  background: var(--accent-pale);
+  color: #17478f;
+}
+
+.badge-notification {
+  background: #eef0f3;
+  color: #4a5260;
+}
+
+.diapositive .niveau {
+  font-size: 2cqw;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+
+.diapositive .niveau .badge {
+  font-size: 1.6cqw;
 }
 
 .justifications {
-  padding-left: 2.5cqw;
-  font-size: 1.7cqw;
+  padding-left: 2.2cqw;
+  font-size: 1.6cqw;
   display: grid;
   gap: 0.6cqw;
 }
+
+/* --- Gains attendus : le total en grand, puis une barre par processus --- */
 
 .barres {
   list-style: none;
   padding: 0;
   display: grid;
   gap: 0.6cqw;
-  font-size: 1.7cqw;
+  font-size: 1.6cqw;
 }
 
 /* Sept processus sous le grand chiffre : un gabarit plus compact que les autres. */
 .diapositive-GainsAttendus .chiffre-cle {
-  font-size: 5.2cqw;
+  font-size: 4.6cqw;
 }
 
 .diapositive-GainsAttendus .contenu-de-diapositive {
-  gap: 1cqw;
+  gap: 0.9cqw;
 }
 
 .barres li {
   display: grid;
-  grid-template-columns: 28% 1fr 22%;
+  grid-template-columns: 28% 1fr 20%;
   align-items: center;
   gap: 1.5cqw;
+}
+
+.barres .valeur {
+  text-align: right;
 }
 
 .barres .nom,
@@ -578,9 +829,9 @@ label.interrupteur {
 
 .barres .piste {
   position: relative;
-  height: 1.5cqw;
-  background: #f0f0ee;
-  border-radius: 0.5cqw;
+  height: 1.4cqw;
+  background: #f1f3f6;
+  border-radius: 0.4cqw;
 }
 
 .barres .barre-basse,
@@ -592,43 +843,154 @@ label.interrupteur {
 
 .barres .barre-basse {
   left: 0;
-  background: #1f5fbf;
-  border-radius: 0.5cqw 0 0 0.5cqw;
+  background: var(--accent-diapo);
+  border-radius: 0.4cqw 0 0 0.4cqw;
 }
 
 .barres .barre-haute {
-  background: #9fbbe8;
+  background: #a9c0e8;
 }
+
+.legende-des-barres {
+  margin-left: 2cqw;
+  font-size: 1.3cqw;
+}
+
+.pastille {
+  display: inline-block;
+  width: 1.2cqw;
+  height: 1.2cqw;
+  margin: 0 0.4cqw 0 1cqw;
+  border-radius: 0.25cqw;
+  vertical-align: -0.1cqw;
+}
+
+.pastille-basse {
+  background: var(--accent-diapo);
+}
+
+.pastille-haute {
+  background: #a9c0e8;
+}
+
+/* Le travail rattrapé, sous les barres : à part, et plus discret que le gain. */
+.diapositive .travail-rattrape {
+  font-size: 1.5cqw;
+  color: var(--gris);
+  padding-left: 1.2cqw;
+  border-left: 0.3cqw solid var(--vert);
+}
+
+/* --- Feuille de route : rang, chantier, niveau, valeur --- */
 
 .chantiers {
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 1.2cqw;
+  gap: 0;
 }
 
 .chantiers li {
   display: grid;
-  grid-template-columns: 4cqw 1fr auto auto;
+  grid-template-columns: 3.6cqw minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 2cqw;
+  gap: 1.8cqw;
+  padding: 0.55cqw 0;
+  border-bottom: 0.1cqw solid var(--filet);
+  font-size: 1.8cqw;
 }
 
 .chantiers .rang {
   display: grid;
   place-items: center;
-  width: 3.6cqw;
-  height: 3.6cqw;
+  width: 2.8cqw;
+  height: 2.8cqw;
   border-radius: 50%;
-  background: #1f5fbf;
+  background: var(--accent-diapo);
   color: #ffffff;
   font-weight: 700;
+  font-size: 1.6cqw;
 }
 
-.chantiers .niveau {
-  font-size: 1.6cqw !important;
-  font-weight: normal !important;
-  color: #5f6368;
+.chantiers .valeur {
+  min-width: 17cqw;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Options d'hébergement : une colonne par option --- */
+
+.options-d-hebergement {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2cqw;
+}
+
+.options-d-hebergement > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6cqw;
+  min-width: 0;
+  padding: 1.4cqw 1.6cqw;
+  border: 0.12cqw solid var(--filet);
+  border-top: 0.5cqw solid var(--accent-diapo);
+  border-radius: 0.8cqw;
+  font-size: 1.5cqw;
+}
+
+.options-d-hebergement h3 {
+  font-size: 2cqw;
+  line-height: 1.2;
+}
+
+.options-d-hebergement .cout-par-heure {
+  font-size: 2.6cqw;
+  font-weight: 700;
+  color: var(--accent-diapo);
+  line-height: 1.1;
+}
+
+.options-d-hebergement dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4cqw 1.2cqw;
+  margin: 0;
+}
+
+.options-d-hebergement dt {
+  color: var(--gris);
+}
+
+.options-d-hebergement dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.options-d-hebergement :is(.inclus, .limites) {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2cqw;
+  font-size: 1.35cqw;
+}
+
+.options-d-hebergement .inclus li::before {
+  content: '✓ ';
+  color: var(--vert);
+}
+
+.options-d-hebergement .limites li::before {
+  content: '– ';
+}
+
+.options-d-hebergement .limites {
+  color: var(--gris);
 }
 
 /* --- Lancement, aperçu, diffusion --- */
@@ -637,28 +999,53 @@ label.interrupteur {
   max-width: 1400px;
 }
 
+.presentation h1 .discret {
+  color: var(--discret);
+  font-weight: 600;
+}
+
+.ecran-de-lancement {
+  display: grid;
+  gap: 20px;
+}
+
 .reglages,
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   align-items: end;
-  margin: 16px 0;
+}
+
+.reglages {
+  padding: 16px 20px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: var(--surface);
 }
 
 .apercu {
   list-style: none;
   padding: 0;
+  margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
 }
 
 .miniature {
+  display: block;
   width: 100%;
   padding: 0;
-  border: 2px solid var(--bordure);
+  border: 2px solid transparent;
+  border-radius: 8px;
   overflow: hidden;
+  background: none;
+  box-shadow: 0 1px 3px rgb(20 33 61 / 15%);
+}
+
+.miniature:hover {
+  box-shadow: 0 4px 12px rgb(20 33 61 / 20%);
 }
 
 .miniature[aria-current='true'] {
@@ -678,7 +1065,7 @@ label.interrupteur {
   display: none;
 }
 
-.scene .diapositive {
+.scene .toile {
   width: min(100vw, calc(100vh * 16 / 9));
 }
 
@@ -688,93 +1075,6 @@ label.interrupteur {
   bottom: 8px;
   color: #8a8f98;
   font-size: 14px;
-}
-
-.bouton-presenter {
-  padding: 8px 16px;
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* Le travail rattrapé, sous les barres des gains : à part, et plus discret que le gain. */
-.diapositive .travail-rattrape {
-  font-size: 1.6cqw;
-  color: #5f6368;
-}
-
-/* --- Diapositive « Deux façons de l'héberger » : une colonne par option --- */
-
-.options-d-hebergement {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 2cqw;
-}
-
-.options-d-hebergement > li {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6cqw;
-  min-width: 0;
-  padding: 1.4cqw 1.6cqw;
-  border: 0.15cqw solid #d9d9d6;
-  border-radius: 1cqw;
-  font-size: 1.5cqw;
-}
-
-.options-d-hebergement h3 {
-  margin: 0;
-  font-size: 2cqw;
-  line-height: 1.2;
-}
-
-.options-d-hebergement .cout-par-heure {
-  font-size: 2.6cqw;
-  font-weight: 700;
-  color: #1f5fbf;
-  line-height: 1.1;
-}
-
-.options-d-hebergement dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.4cqw 1.2cqw;
-  margin: 0;
-}
-
-.options-d-hebergement dt {
-  color: #5f6368;
-}
-
-.options-d-hebergement dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.options-d-hebergement :is(.inclus, .limites) {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2cqw;
-  font-size: 1.35cqw;
-}
-
-.options-d-hebergement .inclus li::before {
-  content: '✓ ';
-  color: #2e7d32;
-}
-
-.options-d-hebergement .limites li::before {
-  content: '– ';
-}
-
-.options-d-hebergement .limites {
-  color: #5f6368;
 }
 
 /* --- Saisie des options --- */
@@ -793,7 +1093,7 @@ textarea {
   font-weight: 600;
 }
 
-/* --- Vue présentateur --- */
+/* --- Vue présentateur : la diapositive affichée, la suivante, le temps et les notes --- */
 
 .presentateur {
   max-width: 1600px;
@@ -806,6 +1106,12 @@ textarea {
   font-size: 1.3em;
 }
 
+.entete-du-presentateur [role='timer'] {
+  font-size: 1.6em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .vues {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -813,9 +1119,33 @@ textarea {
   align-items: start;
 }
 
+.vues .intitule {
+  margin: 0 0 8px;
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--discret);
+}
+
+.vues .toile {
+  box-shadow: 0 1px 4px rgb(20 33 61 / 20%);
+}
+
+.notes {
+  margin-top: 24px;
+  padding: 16px 20px;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.notes h2 {
+  margin-top: 0;
+}
+
 .notes li {
   margin-bottom: 8px;
-  font-size: 1.15em;
+  font-size: 1.2em;
 }
 
 /* --- Impression : l'export PDF, une diapositive par page --- */
@@ -849,7 +1179,7 @@ textarea {
     display: block;
   }
 
-  .impression .diapositive {
+  .impression .toile {
     break-after: page;
     break-inside: avoid;
   }
