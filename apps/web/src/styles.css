@@ -977,7 +977,7 @@ label.interrupteur {
   display: flex;
   flex-direction: column;
   gap: 0.2cqw;
-  font-size: 1.35cqw;
+  font-size: 1.3cqw;
 }
 
 .options-d-hebergement .inclus li::before {

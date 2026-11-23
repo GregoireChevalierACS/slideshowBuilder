@@ -367,16 +367,15 @@ const Options = ({ d }: { readonly d: DiapositiveOptions }) => (
     partie={undefined}
   >
     <p className="contexte">
-      Pour{' '}
+      Coût par heure récupérée sur 3 ans, pour{' '}
       {fourchette(d.tempsGagneParAn.bas.enSecondes, d.tempsGagneParAn.haut.enSecondes, enHeures)}{' '}
-      gagnées par an, comparées sur 3 ans
+      gagnées par an
     </p>
     <ul className="options-d-hebergement">
       {d.options.map(({ option, coutSurUnAn, coutSurTroisAns, coutParHeureRecuperee }) => (
         <li key={option.nom}>
           <h3>{option.nom}</h3>
           <p className="cout-par-heure">{enCoutParHeure(coutParHeureRecuperee)}</p>
-          <p className="legende">par heure récupérée</p>
           <dl>
             <dt>Sur 3 ans</dt>
             <dd>

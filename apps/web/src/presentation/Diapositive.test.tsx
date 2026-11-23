@@ -273,8 +273,10 @@ describe('DiapositiveAffichee : options d’hébergement', () => {
     const contenu = texte(options([uneOption('Au bureau'), uneOption('Dans le cloud')]));
 
     expect(contenu).toContain('Deux façons de l’héberger');
-    expect(contenu).toContain('Pour 426 h à 547 h gagnées par an, comparées sur 3 ans');
-    expect(contenu).toContain('Au bureau2,36 €/h à 3,60 €/hpar heure récupérée');
+    expect(contenu).toContain(
+      'Coût par heure récupérée sur 3 ans, pour 426 h à 547 h gagnées par an',
+    );
+    expect(contenu).toContain('Au bureau2,36 €/h à 3,60 €/hSur 3 ans');
     expect(contenu).toContain('Sur 3 ans3 880 € à 4 600 €La première année3 160 € à 3 400 €');
     expect(contenu).toContain('Serveur dans vos locauxDépend de votre connexion');
   });
