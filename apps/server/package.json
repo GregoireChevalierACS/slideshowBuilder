@@ -9,7 +9,7 @@
     "start": "node --env-file-if-exists=.env dist/main.mjs"
   },
   "dependencies": {
-    "@fastify/static": "10.1.11",
+    "@fastify/static": "10.1.12",
     "@slideshow/application": "workspace:*",
     "@slideshow/domain": "workspace:*",
     "fastify": "5.12.8",
@@ -17,6 +17,6 @@
   },
   "devDependencies": {
     "tsdown": "0.23.7",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   }
 }
